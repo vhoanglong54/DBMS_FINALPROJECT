@@ -1,0 +1,20 @@
+# Build and local tooling
+[Bb]in/
+[Oo]bj/
+node_modules/
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Secrets and workstation-specific configuration
+appsettings.Development.json
+appsettings.Local.json
+.env
+*.bak
+*.mdf
+*.ldf
+
+# Source material supplied outside the deliverable
+HuongDan_Project_Rubric_DBMS330284.docx.pdf
+
