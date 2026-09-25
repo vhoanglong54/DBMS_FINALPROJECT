@@ -22,15 +22,15 @@ Runner dừng ngay khi một script lỗi (`sqlcmd -b`) và chạy theo thứ t�
 
 | File | Owner | Nội dung |
 |---|---|---|
-| `02_constraints.sql` | TV2 + TV3 | constraint nghiệp vụ bổ sung ngoài contract nền |
-| `03_triggers.sql` | TV2 + TV3 | ≥5 trigger set-based |
-| `04_views.sql` | TV2 + TV3 + TV4 | ≥5 view báo cáo/nghiệp vụ |
-| `05_indexes.sql` | TV2 + TV3 | ≥5 index và truy vấn benchmark |
-| `06_procedures.sql` | TV2 + TV3 | ≥5 procedure nghiệp vụ có TRY/CATCH/transaction |
-| `07_functions.sql` | TV2 + TV3 | ≥5 scalar/TVF |
+| `02a_membership_constraints.sql` / `02b_operations_constraints.sql` | TV2 / TV3 | constraint nghiệp vụ bổ sung ngoài contract nền |
+| `03a_membership_triggers.sql` / `03b_operations_triggers.sql` | TV2 / TV3 | ≥5 trigger set-based toàn dự án |
+| `04a_membership_views.sql` / `04b_operations_views.sql` / `04c_reporting_views.sql` | TV2 / TV3 / TV4 phối hợp | ≥5 view báo cáo/nghiệp vụ |
+| `05a_membership_indexes.sql` / `05b_operations_indexes.sql` | TV2 / TV3 | ≥5 index và truy vấn benchmark |
+| `06a_membership_procedures.sql` / `06b_operations_procedures.sql` | TV2 / TV3 | ≥5 procedure nghiệp vụ có TRY/CATCH/transaction |
+| `07a_membership_functions.sql` / `07b_operations_functions.sql` | TV2 / TV3 | ≥5 scalar/TVF |
 | `08_security.sql` | TV1 | role/login, GRANT/REVOKE/DENY, authentication API |
 
-TV2/TV3 thêm file đúng số thứ tự; không sửa table/column contract nếu chưa có migration và review của TV1.
+TV2/TV3 dùng đúng hậu tố module để tránh conflict khi phát triển song song; TV1 quyết định thứ tự chạy cuối. Không sửa table/column contract nếu chưa có migration và review của TV1.
 
 ## Tài khoản ứng dụng demo
 
