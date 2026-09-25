@@ -10,7 +10,7 @@ V1 tập trung một cơ sở gym, thanh toán được nhân viên xác nhận 
 
 ```mermaid
 flowchart LR
-  U[Admin / Lễ tân / HLV / Kế toán / Hội viên] --> UI[ASP.NET Core MVC .NET 8 + Bootstrap]
+  U[Admin / Lễ tân / HLV / Kế toán / Hội viên] --> UI[ASP.NET Core MVC .NET 8 + responsive CSS]
   UI --> AUTH[Xác thực + phân quyền ứng dụng]
   AUTH --> DAL[Repository ADO.NET\nchỉ gọi View / Stored Procedure / Function]
   DAL --> SQL[(SQL Server\nGymManagementDB)]
@@ -70,11 +70,12 @@ erDiagram
   LICHLOP ||--o{ DATLOP : nhan
   HOIVIEN ||--o{ CHECKIN : vao
   NHANVIEN ||--o{ CHECKIN : xac_nhan
+  NGUOIDUNG o|--o{ AUDITLOG : thuc_hien
 ```
 
 | Bảng | Khóa chính | Khóa ngoại / ý nghĩa |
 |---|---|---|
-| `VaiTro` | `RoleId` | Danh mục 5 role hệ thống |
+| `VaiTro` | `RoleId` | Danh mục 4 role ứng dụng |
 | `NguoiDung` | `UserId` | `RoleId`; tài khoản đăng nhập, hash mật khẩu |
 | `NhanVien` | `EmployeeId` | `UserId` (nullable/unique); nhân sự, HLV/lễ tân/kế toán |
 | `HoiVien` | `MemberId` | hồ sơ và mã check-in duy nhất |
@@ -88,6 +89,7 @@ erDiagram
 | `LichLop` | `SessionId` | `ClassId`, `RoomId`, `TrainerId`; buổi cụ thể và sức chứa |
 | `DatLop` | `BookingId` | `MemberId`, `SessionId`; trạng thái đặt/hủy/đã tham gia |
 | `CheckIn` | `CheckInId` | `MemberId`, `EmployeeId`; lượt vào gym/lớp |
+| `AuditLog` | `AuditId` | `ChangedByUserId`; lịch sử thay đổi dạng JSON |
 
 ## 5. Gói đối tượng SQL có ý nghĩa nghiệp vụ
 

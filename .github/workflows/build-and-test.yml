@@ -1,0 +1,56 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [main, develop, tv1, tv2, tv3, tv4]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  dotnet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: '**/*.csproj'
+
+      - name: Restore
+        run: dotnet restore GymManagement.sln
+
+      - name: Build
+        run: dotnet build GymManagement.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test GymManagement.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
+
+  sql-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify required SQL artifacts
+        shell: pwsh
+        run: |
+          $required = @(
+            'database/00_create_database.sql',
+            'database/01_schema.sql',
+            'database/08_security.sql',
+            'database/09_seed_demo.sql',
+            'database/10_smoke_tests.sql'
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path -LiteralPath $path)) { throw "Missing $path" }
+          }
+          $schema = Get-Content -Raw database/01_schema.sql
+          if (($schema | Select-String -AllMatches 'CREATE TABLE dbo\.').Matches.Count -lt 8) {
+            throw 'Rubric requires at least 8 related tables.'
+          }
