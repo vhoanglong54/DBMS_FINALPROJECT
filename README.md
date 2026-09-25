@@ -22,7 +22,7 @@ tests/          Unit test và bằng chứng SQL/hiệu năng/concurrency
 ## Quy trình nhanh
 
 1. Leader cập nhật tên nhóm và danh sách thành viên trong `docs/TEAM_TASKS.md`.
-2. Mỗi thành viên checkout `tv1`, `tv2`, `tv3` hoặc `tv4`; đọc `TASK.md`, `BRANCH_RULES.md` trước khi code và cập nhật `HANDOFF_LOG.md` sau mỗi task.
+2. Mỗi thành viên checkout `tv1`, `tv2`, `tv3` hoặc `tv4`; đọc `docs/team/<tv>/TASK.md`, `docs/team/<tv>/BRANCH_RULES.md` trước khi code và cập nhật `docs/team/<tv>/HANDOFF_LOG.md` sau mỗi task.
 3. Dựng database: `.\database\run-tv1.ps1 -Server '.\SQLEXPRESS' -DatabaseName 'GymManagementDB'`.
 4. Cấu hình connection string ngoài source:
 
