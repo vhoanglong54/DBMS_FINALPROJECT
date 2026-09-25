@@ -2,15 +2,15 @@
 
 ## Nhánh
 
-`main` chỉ chứa bản đã nghiệm thu. `develop` là nhánh tích hợp. Mỗi người chỉ làm trực tiếp trên nhánh được giao: `feature/tv1-leader-core-security`, `feature/tv2-membership-billing`, `feature/tv3-classes-checkin`, `feature/tv4-web-reporting`.
+`main` chỉ chứa bản đã nghiệm thu. `develop` là nhánh tích hợp. Mỗi người chỉ làm trực tiếp trên nhánh được giao: `tv1`, `tv2`, `tv3`, `tv4`.
 
 Không push trực tiếp vào `main`/`develop`. Chỉ TV1 được merge sau Pull Request (PR) có checklist xanh và tối thiểu một người review. Không force-push nhánh dùng chung.
 
 ## Trước khi bắt đầu và trước PR
 
 ```powershell
-git switch feature/<nhanh-cua-ban>
-git pull origin feature/<nhanh-cua-ban>
+git switch tv<x>
+git pull origin tv<x>
 git fetch origin
 git rebase origin/develop
 ```

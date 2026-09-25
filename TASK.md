@@ -6,12 +6,12 @@ Thiết lập contract kỹ thuật chung để ba module còn lại phát tri�
 
 ## Issue phải thực hiện
 
-- [ ] **GYM-01** Chốt tên nhóm, danh sách thành viên, glossary, ERD và data dictionary v1; chủ trì review trước khi có code SQL.
-- [ ] **GYM-02** Tạo `00_create_database.sql`, `01_schema.sql`, `09_seed_demo.sql`, `10_smoke_tests.sql`; sở hữu `VaiTro`, `NguoiDung`, `NhanVien` và các FK/cột audit chung.
-- [ ] **GYM-03** Tạo `08_security.sql`: tối thiểu `rl_GymAdmin`, `rl_LeTan`, `rl_HuanLuyenVien`, `rl_KeToan`; login/user mẫu; minh họa `GRANT`, `REVOKE`, `DENY`; test từng role.
-- [ ] **GYM-04** Scaffold ASP.NET Core MVC .NET 8, config mẫu/Secret Manager, kết nối `Microsoft.Data.SqlClient`, đăng nhập và middleware/authorize theo role. Không commit secret.
-- [ ] **GYM-11** Tạo test convention/CI, chủ trì clean-install test, index/security/concurrency evidence và integration merge.
-- [ ] **GYM-12** Điều phối báo cáo, slide, rehearsal, backlog/GitHub Project và rà gate rubric trước release.
+- [x] **GYM-01** Chốt glossary, ERD và data dictionary v1; tên nhóm/danh sách thật cập nhật khi leader cung cấp.
+- [x] **GYM-02** Tạo `00_create_database.sql`, `01_schema.sql`, `09_seed_demo.sql`, `10_smoke_tests.sql`; sở hữu `VaiTro`, `NguoiDung`, `NhanVien` và các FK/cột audit chung.
+- [x] **GYM-03** Tạo `08_security.sql`: `rl_GymAdmin`, `rl_LeTan`, `rl_HuanLuyenVien`, `rl_KeToan`, service role; tùy chọn 4 login; minh họa `GRANT/REVOKE/DENY`.
+- [x] **GYM-04** Scaffold ASP.NET Core MVC .NET 8, User Secrets/env config, `Microsoft.Data.SqlClient`, PBKDF2 login, lockout và role authorization.
+- [x] **GYM-11 (phần TV1)** Tạo CI/test convention và clean-install/security evidence. Index/concurrency evidence chờ module TV2/TV3.
+- [x] **GYM-12 (khởi tạo)** Tạo report/slide outline, PR template, branch rules và handoff log. Điều phối/rehearsal tiếp tục đến cuối project.
 
 ## Điều kiện nghiệm thu
 
