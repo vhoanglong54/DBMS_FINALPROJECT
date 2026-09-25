@@ -12,10 +12,10 @@ Email không phải là thông tin xác thực GitHub; không lưu personal acce
 gh auth login --web --git-protocol https
 gh repo create NhomXX_QuanLyPhongGym --private --source . --remote origin --push
 git push --set-upstream origin develop
-git push origin feature/tv1-leader-core-security feature/tv2-membership-billing feature/tv3-classes-checkin feature/tv4-web-reporting
+git push origin tv1 tv2 tv3 tv4
 ```
 
-Sau đó kiểm tra URL remote bằng `git remote -v` và xác nhận năm nhánh `main`, `develop`, bốn `feature/tv*` đã xuất hiện trên GitHub.
+Sau đó kiểm tra URL remote bằng `git remote -v` và xác nhận sáu nhánh `main`, `develop`, `tv1`, `tv2`, `tv3`, `tv4` đã xuất hiện trên GitHub.
 
 ## Cấu hình branch protection (Settings → Branches)
 
@@ -23,7 +23,7 @@ Sau đó kiểm tra URL remote bằng `git remote -v` và xác nhận năm nhán
 |---|---|---|---|---|
 | `main` | cấm | bắt buộc 1 review | `build-and-smoke` bắt buộc khi CI có | TV1; chỉ sau demo/release checklist |
 | `develop` | cấm | bắt buộc 1 review | `build-and-smoke` | TV1 sau khi owner module duyệt |
-| `feature/tv*` | owner nhánh push | khuyến nghị 1 review | chạy test module | owner nhánh |
+| `tv1`–`tv4` | owner nhánh push | khuyến nghị 1 review | chạy test module | owner nhánh |
 
 Bật thêm: dismiss stale approvals khi có push mới, yêu cầu branch up-to-date trước merge, chặn force push/xóa branch `main`/`develop`, và squash merge để lịch sử release gọn. Không bật rule cấm commit history của feature branch nếu nhóm chưa quen rebase.
 
