@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - Gym Management</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" asp-controller="Home" asp-action="Index">Gym Management</a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <nav aria-label="Điều hướng chính">
+                <a asp-controller="Home" asp-action="Index">Tổng quan</a>
+                @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist))
+                {
+                    <span class="nav-placeholder">Hội viên</span>
+                    <span class="nav-placeholder">Check-in</span>
+                }
+                @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Trainer))
+                {
+                    <span class="nav-placeholder">Lịch lớp</span>
+                }
+                @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Accountant))
+                {
+                    <span class="nav-placeholder">Tài chính</span>
+                }
+            </nav>
+            <div class="user-menu">
+                <span>@User.FindFirst("display_name")?.Value</span>
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    <button class="button button-secondary" type="submit">Đăng xuất</button>
+                </form>
+            </div>
+        }
+    </header>
+
+    <main class="container">
+        @RenderBody()
+    </main>
+
+    <footer>
+        DBMS330284 · Hệ thống quản lý phòng gym
+    </footer>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

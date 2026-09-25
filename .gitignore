@@ -1,6 +1,8 @@
 # Build and local tooling
 [Bb]in/
 [Oo]bj/
+TestResults/
+coverage/
 node_modules/
 .vs/
 .vscode/
@@ -9,6 +11,7 @@ node_modules/
 
 # Secrets and workstation-specific configuration
 appsettings.Development.json
+appsettings.Production.json
 appsettings.Local.json
 .env
 *.bak

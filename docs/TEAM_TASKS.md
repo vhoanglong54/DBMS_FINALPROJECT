@@ -4,10 +4,10 @@
 
 | TV | Vai trò | Nhánh | Trách nhiệm chính | Deliverable / tiêu chí Done |
 |---|---|---|---|---|
-| TV1 — **Leader** | kiến trúc sư, tích hợp, bảo mật | `feature/tv1-leader-core-security` | data contract, user/role/employee, login nền tảng, security, CI/test, tích hợp và điều phối | schema chuẩn, 4+ role/login + GRANT/REVOKE/DENY, app foundation/login, checklist rubric, biên bản review |
-| TV2 | membership & billing | `feature/tv2-membership-billing` | hội viên/gói/đăng ký/hóa đơn/thanh toán, logic thu phí | CRUD + 2 transaction/SP, constraints/triggers/functions/views tương ứng, màn hình & test |
-| TV3 | vận hành lớp & check-in | `feature/tv3-classes-checkin` | phòng/lớp/lịch/HLV/booking/check-in, concurrency | CRUD + 3 transaction/SP, trigger capacity/lịch, 2-session concurrency evidence, màn hình & test |
-| TV4 | ứng dụng & reporting | `feature/tv4-web-reporting` | UI layout, dashboard, report/search, error UX, tài liệu demo | các view/report được gọi từ app, UX/validation, screenshots, README chạy, slide hỗ trợ |
+| TV1 — **Leader** | kiến trúc sư, tích hợp, bảo mật | `tv1` | data contract, user/role/employee, login nền tảng, security, CI/test, tích hợp và điều phối | schema chuẩn, 4+ role/login + GRANT/REVOKE/DENY, app foundation/login, checklist rubric, biên bản review |
+| TV2 | membership & billing | `tv2` | hội viên/gói/đăng ký/hóa đơn/thanh toán, logic thu phí | CRUD + 2 transaction/SP, constraints/triggers/functions/views tương ứng, màn hình & test |
+| TV3 | vận hành lớp & check-in | `tv3` | phòng/lớp/lịch/HLV/booking/check-in, concurrency | CRUD + 3 transaction/SP, trigger capacity/lịch, 2-session concurrency evidence, màn hình & test |
+| TV4 | ứng dụng & reporting | `tv4` | UI layout, dashboard, report/search, error UX, tài liệu demo | các view/report được gọi từ app, UX/validation, screenshots, README chạy, slide hỗ trợ |
 
 ## Backlog có owner rõ ràng
 
