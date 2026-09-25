@@ -1,0 +1,58 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Tổng quan";
+}
+
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Tổng quan</p>
+        <h1>Xin chào, @Model.DisplayName</h1>
+        <p class="muted">Vai trò: @Model.RoleName (@Model.RoleCode)</p>
+    </div>
+</section>
+
+@if (Model.MustChangePassword)
+{
+    <div class="alert alert-warning" role="alert">
+        Tài khoản đang dùng mật khẩu tạm thời. Hãy đổi mật khẩu trước khi thao tác nghiệp vụ.
+    </div>
+}
+
+<div class="dashboard-grid">
+    @if (User.IsInRole(RoleCodes.Admin))
+    {
+        <article class="dashboard-card">
+            <h2>Quản trị</h2>
+            <p>Quản lý tài khoản, vai trò, cấu hình và nhật ký hệ thống.</p>
+        </article>
+    }
+    @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist))
+    {
+        <article class="dashboard-card">
+            <h2>Lễ tân</h2>
+            <p>Tiếp nhận hội viên, đăng ký gói, đặt lớp và check-in.</p>
+        </article>
+    }
+    @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Trainer))
+    {
+        <article class="dashboard-card">
+            <h2>Huấn luyện viên</h2>
+            <p>Xem lịch được phân công và cập nhật điểm danh lớp.</p>
+        </article>
+    }
+    @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Accountant))
+    {
+        <article class="dashboard-card">
+            <h2>Kế toán</h2>
+            <p>Theo dõi hóa đơn, thanh toán và báo cáo doanh thu.</p>
+        </article>
+    }
+</div>
+
+<section class="technical-info">
+    <h2>Phiên đăng nhập</h2>
+    <dl>
+        <dt>Tên đăng nhập</dt><dd>@Model.Username</dd>
+        <dt>Mã nhân viên</dt><dd>@(Model.EmployeeId?.ToString() ?? "Chưa liên kết")</dd>
+    </dl>
+</section>
