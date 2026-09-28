@@ -18,6 +18,17 @@ Không sửa/xóa entry cũ. Sau mỗi task, thêm entry mới lên đầu phầ
 
 ## Nhật ký
 
+### 2026-09-28 — GYM-12: Chuyển sang task branch theo Issue
+
+- Người thực hiện: TV1 / Leader
+- Trạng thái: Done
+- Thay đổi: thay quy ước nhánh theo người bằng task branch theo Issue; cập nhật README, rule Git, bảng phân công và CI.
+- Contract ảnh hưởng: Không.
+- Kiểm thử: kiểm tra mỗi nhánh cũ không khác nội dung so với `develop`; kiểm tra cấu hình workflow nhận nhánh `feature/**`.
+- Bằng chứng rubric: `docs/CONTRIBUTING.md`, `docs/TEAM_TASKS.md`, `.github/workflows/build-and-test.yml`.
+- Bàn giao cho: TV2 (GYM-05), TV3 (GYM-07).
+- Việc tiếp theo/rủi ro: tạo Issue GitHub và task branch từ `develop`; cần GitHub username thật của TV2/TV3 trước khi gán assignee trên GitHub.
+
 ### 2026-09-25 — GYM-01/02/03/04: Core, security và application foundation
 
 - Người thực hiện: TV1 / Leader

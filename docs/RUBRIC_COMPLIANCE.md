@@ -10,8 +10,8 @@ Mỗi checkbox chỉ được đánh dấu khi script chạy mới được trê
 | Transaction & bảo mật — 10% | ≥5 transaction, demo lỗi/đồng thời, ≥4 role và GRANT/REVOKE/DENY | `08_security.sql`, `tests/concurrency/`, báo cáo Chương 4 | TV1 + TV2/TV3 |
 | Ứng dụng SQL Server — 20% | cấu hình kết nối, login/role, CRUD, search/report, SP/FN, lỗi | `src/`, `appsettings.example.json`, test manual | TV4 + module owners |
 | UX — 5% | nhất quán, dễ dùng, validate đầu vào | screenshots, checklist UX | TV4 |
-| Báo cáo — 10% | 50–100 trang, đúng 6 chương, trích dẫn, minh họa | `docs/report/`, PDF cuối | TV1 điều phối + tất cả |
-| Bảo vệ & teamwork — 10% | mỗi người nắm toàn hệ thống, demo thật, lịch sử Git rõ | `docs/TEAM_TASKS.md`, commits/PRs, `docs/presentation/` | TV1 + tất cả |
+| Báo cáo — 10% | 50–100 trang, đúng 6 chương, trích dẫn, minh họa | PDF báo cáo cuối và nguồn minh họa | TV1 điều phối + tất cả |
+| Bảo vệ & teamwork — 10% | mỗi người nắm toàn hệ thống, demo thật, lịch sử Git rõ | `docs/TEAM_TASKS.md`, GitHub Issues/PRs, slide demo cuối | TV1 + tất cả |
 
 ## Gate không được bỏ qua
 
