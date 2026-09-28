@@ -18,6 +18,17 @@ Không sửa/xóa entry cũ. Sau mỗi task, thêm entry mới lên đầu phầ
 
 ## Nhật ký
 
+### 2026-09-28 — GYM-12: Archive nhánh theo thành viên
+
+- Người thực hiện: TV1 / Leader
+- Trạng thái: Done
+- Thay đổi: tạo tag archive cho tip `tv1`–`tv4` trước khi retire nhánh dài hạn; TV2 có thêm tag WIP tại `78c20a5` và commit đã được chuyển sang task branch GYM-05.
+- Contract ảnh hưởng: Không.
+- Kiểm thử: xác nhận tất cả archive tag đã có trên remote; xác nhận `feature/5-gym-05-membership-billing-db` và `feature/7-gym-07-classes-booking-checkin-db` cùng kế thừa `develop`.
+- Bằng chứng rubric: tag `archive/tv1-pre-task-branches`, `archive/tv2-pre-task-branches`, `archive/tv2-active-wip-before-task-migration`, `archive/tv3-pre-task-branches`, `archive/tv4-pre-task-branches`.
+- Bàn giao cho: TV2 (GYM-05), TV3 (GYM-07).
+- Việc tiếp theo/rủi ro: chỉ dùng task branch mới; PR #14 cần review/merge để rule mới xuất hiện trên `develop`.
+
 ### 2026-09-28 — GYM-05: Di chuyển WIP TV2 sang task branch
 
 - Người thực hiện: TV1 / Leader
