@@ -4,7 +4,7 @@
 
 `main` chỉ chứa bản đã nghiệm thu. `develop` là nhánh tích hợp. Mọi thay đổi mới phải nằm trên task branch, không dùng nhánh dài hạn theo người.
 
-Mỗi Issue có một owner, phạm vi, dependency, Definition of Done và một branch theo mẫu `feature/<issue-number>-gym-xx-short-name`, ví dụ `feature/12-gym-05-membership-billing-db`. Một branch chỉ giải quyết một Issue. Các nhánh `tv1`, `tv2`, `tv3`, `tv4` là lịch sử trước khi chuyển mô hình, không nhận công việc mới.
+Mỗi Issue có một owner, phạm vi, dependency, Definition of Done và một branch theo mẫu `feature/<issue-number>-gym-xx-short-name`, ví dụ `feature/12-gym-05-membership-billing-db`. Tiêu đề Issue bắt buộc theo mẫu `[GYM-XX][TVx] <mô tả ngắn>` để owner hiển thị ngay trong danh sách Issue; sau khi nhóm cung cấp GitHub username, TV1 cũng gán người đó vào trường `Assignees` của GitHub. Một branch chỉ giải quyết một Issue. Các nhánh `tv1`, `tv2`, `tv3`, `tv4` là lịch sử trước khi chuyển mô hình, không nhận công việc mới.
 
 Không push trực tiếp vào `main`/`develop`. Owner được push vào task branch của Issue mình phụ trách. Chỉ TV1 được merge sau Pull Request (PR) có checklist xanh và tối thiểu một người review. Không force-push `main`, `develop` hoặc branch đã có PR review.
 

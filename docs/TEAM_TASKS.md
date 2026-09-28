@@ -11,22 +11,22 @@
 
 ## Backlog có owner rõ ràng
 
-Khi một mục chuyển `Ready`, TV1 tạo GitHub Issue; số Issue được dùng trong tên branch. Owner đổi trạng thái `In progress` khi có commit đầu tiên. Một task chỉ `Done` sau khi PR merge vào `develop`.
+Mỗi dòng dưới đây liên kết trực tiếp tới GitHub Issue tương ứng, là nguồn tiến độ chính thức. Tiêu đề Issue luôn theo mẫu `[GYM-XX][TVx] ...` để nhìn thấy ngay người nhận việc; body Issue lưu phạm vi, dependency, branch và Definition of Done. Khi một mục chuyển `Ready`, TV1 tạo GitHub Issue; số Issue được dùng trong tên branch. Owner đổi trạng thái `In progress` khi có commit đầu tiên. Một task chỉ `Done` sau khi PR merge vào `develop`.
 
-| ID | Việc | Owner | Trạng thái | Dependency | Nhánh task khi Ready | Done khi |
-|---|---|---|---|---|---|---|
-| GYM-01 | Xác nhận tên nhóm, scope, glossary và ERD v1 | TV1 | Done | - | - | cả nhóm duyệt PR thiết kế |
-| GYM-02 | Tạo schema, seed dữ liệu và migration run-order | TV1 | Done | GYM-01 | - | database dựng sạch thành công |
-| GYM-03 | Login/role, security scripts và policy | TV1 | Done | GYM-02 | - | 4 role + demo GRANT/REVOKE/DENY |
-| GYM-04 | Scaffold web, cấu hình không lộ secret, CI/test template | TV1 | Done | GYM-02 | - | app kết nối bằng cấu hình local |
-| GYM-05 | Membership, plan, invoice, payment database logic | TV2 | Ready | GYM-02 | `feature/5-gym-05-membership-billing-db` | tests và 2 SP transaction pass |
-| GYM-06 | UI CRUD membership/billing | TV2 | Backlog | GYM-04, GYM-05 | `feature/<issue>-gym-06-membership-billing-ui` | thao tác thật qua SP |
-| GYM-07 | Class/session/booking/check-in database logic | TV3 | Ready | GYM-02 | `feature/7-gym-07-classes-booking-checkin-db` | test capacity/trùng lịch pass |
-| GYM-08 | UI vận hành lớp/check-in | TV3 | Backlog | GYM-04, GYM-07 | `feature/<issue>-gym-08-operations-ui` | thao tác thật qua SP |
-| GYM-09 | Dashboard, search, report Views/Functions | TV4 | Backlog | GYM-05, GYM-07 | `feature/<issue>-gym-09-dashboard-reporting` | 5+ view/FN dùng trong app |
-| GYM-10 | UX validation, error/reconnect handling, screenshots | TV4 | Backlog | GYM-04..09 | `feature/<issue>-gym-10-ux-evidence` | checklist UX pass |
-| GYM-11 | Benchmark index, test rollback/concurrency/security | TV1 điều phối; TV2/TV3 thực hiện | Backlog | GYM-05, GYM-07 | `feature/<issue>-gym-11-verification` | evidence lưu repo |
-| GYM-12 | Báo cáo 50-100 trang, slide <=15, rehearsal Q&A | TV1 điều phối; cả nhóm | Backlog | tất cả | `feature/<issue>-gym-12-delivery` | đủ artifact, mọi người demo được phần mình |
+| Issue | ID | Việc | Owner | Trạng thái | Dependency | Nhánh task khi Ready | Done khi |
+|---|---|---|---|---|---|---|---|
+| [#1](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/1) | GYM-01 | Xác nhận tên nhóm, scope, glossary và ERD v1 | TV1 | Done | - | - | cả nhóm duyệt PR thiết kế |
+| [#2](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/2) | GYM-02 | Tạo schema, seed dữ liệu và migration run-order | TV1 | Done | GYM-01 | - | database dựng sạch thành công |
+| [#3](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/3) | GYM-03 | Login/role, security scripts và policy | TV1 | Done | GYM-02 | - | 4 role + demo GRANT/REVOKE/DENY |
+| [#4](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/4) | GYM-04 | Scaffold web, cấu hình không lộ secret, CI/test template | TV1 | Done | GYM-02 | - | app kết nối bằng cấu hình local |
+| [#5](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/5) | GYM-05 | Membership, plan, invoice, payment database logic | TV2 | In progress | GYM-02 | `feature/5-gym-05-membership-billing-db` | tests và 2 SP transaction pass |
+| [#6](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/6) | GYM-06 | UI CRUD membership/billing | TV2 | Backlog | GYM-04, GYM-05 | `feature/<issue>-gym-06-membership-billing-ui` | thao tác thật qua SP |
+| [#7](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/7) | GYM-07 | Class/session/booking/check-in database logic | TV3 | Ready | GYM-02 | `feature/7-gym-07-classes-booking-checkin-db` | test capacity/trùng lịch pass |
+| [#8](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/8) | GYM-08 | UI vận hành lớp/check-in | TV3 | Backlog | GYM-04, GYM-07 | `feature/<issue>-gym-08-operations-ui` | thao tác thật qua SP |
+| [#9](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/9) | GYM-09 | Dashboard, search, report Views/Functions | TV4 | Backlog | GYM-05, GYM-07 | `feature/<issue>-gym-09-dashboard-reporting` | 5+ view/FN dùng trong app |
+| [#10](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/10) | GYM-10 | UX validation, error/reconnect handling, screenshots | TV4 | Backlog | GYM-04..09 | `feature/<issue>-gym-10-ux-evidence` | checklist UX pass |
+| [#11](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/11) | GYM-11 | Benchmark index, test rollback/concurrency/security | TV1 điều phối; TV2/TV3 thực hiện | Backlog | GYM-05, GYM-07 | `feature/<issue>-gym-11-verification` | evidence lưu repo |
+| [#12](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/12) | GYM-12 | Báo cáo 50-100 trang, slide <=15, rehearsal Q&A | TV1 điều phối; cả nhóm | Backlog | tất cả | `feature/<issue>-gym-12-delivery` | đủ artifact, mọi người demo được phần mình |
 
 ## Nhịp quản lý của TV1
 
