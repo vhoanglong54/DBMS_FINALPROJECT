@@ -43,10 +43,10 @@
       
       <div class="sidebar-content">
         <div class="menu-title">Nghiệp vụ chính</div>
-        <a class="menu-item active" onclick="switchTab('tabHoiVien', this)">📋 Quản lý Hội viên (CRUD)</a>
-        <a class="menu-item" onclick="switchTab('tabDangKy', this)">💳 Đăng ký gói tập (Transaction)</a>
-        <a class="menu-item" onclick="switchTab('tabGoiTap', this)">🎁 Các gói tập ưu đãi</a>
-        <a class="menu-item" onclick="switchTab('tabBaoCao', this)">📊 Báo cáo hết hạn (View)</a>
+        <a class="menu-item active" onclick="switchTab('tabHoiVien', this)">Quản lý Hội viên (CRUD)</a>
+        <a class="menu-item" onclick="switchTab('tabDangKy', this)">Đăng ký gói tập (Transaction)</a>
+        <a class="menu-item" onclick="switchTab('tabGoiTap', this)">Các gói tập ưu đãi</a>
+        <a class="menu-item" onclick="switchTab('tabBaoCao', this)">Báo cáo hết hạn (View)</a>
       </div>
 
       <div class="sidebar-bottom">
@@ -99,7 +99,7 @@
             </div>
           </div>
 
-          <!-- KHUNG XEM CHI TIẾT THÔNG TIN HỘI VIÊN (HIỆN LÊN KHI BẤM NÚT CHI TIẾT) -->
+          <!-- KHUNG XEM CHI TIẾT THÔNG TIN HỘI VIÊN -->
           <div class="card" id="cardChiTietHV" style="display: none; margin-top: 24px; border-left: 4px solid var(--primary);">
             <div class="card-header" style="background-color: var(--primary-light);">
               <span class="card-title" id="tieuDeChiTietHV" style="color: var(--primary-hover);">Chi tiết Gói tập & Ưu đãi hội viên</span>
@@ -381,7 +381,7 @@
     </div>
   </div>
 
-  <!-- KẾT NỐI ĐẾN FILE JAVASCRIPT TRONG STATIC -->
+  <!-- KẾT NỐI FILE JAVASCRIPT -->
   <script src="{{ url_for('static', filename='js/membership.js') }}"></script>
 </body>
 </html>

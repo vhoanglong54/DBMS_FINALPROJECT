@@ -4,7 +4,6 @@ import time
 
 membership_bp = Blueprint('membership', __name__)
 
-# Hàm mapping chuẩn hóa dữ liệu Enum
 def map_gender(g): return 'MALE' if g == 'Nam' else 'FEMALE' if g == 'Nữ' else 'OTHER'
 def map_payment(p): return 'CASH' if p == 'Tiền mặt' else 'CARD' if p == 'Thẻ' else 'BANK_TRANSFER'
 
@@ -15,12 +14,14 @@ def handle_hoi_vien():
     
     if request.method == 'POST':
         req = request.json
-        member_code = f"HV{int(time.time())}" # Tự động tạo mã HV
+        member_code = f"HV{int(time.time())}"
         try:
             cursor.execute(
-                """INSERT INTO dbo.HoiVien (MemberCode, FullName, DateOfBirth, Gender, Phone, Email) 
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (member_code, req.get('HoTen'), req.get('NgaySinh'), map_gender(req.get('GioiTinh')), req.get('SoDienThoai'), req.get('Email'))
+                """INSERT INTO dbo.HoiVien (MemberCode, FullName, DateOfBirth, Gender, Phone, Email, ChieuCao, CanNang, ThoiGianTap, HangHoiVien) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (member_code, req.get('HoTen'), req.get('NgaySinh'), map_gender(req.get('GioiTinh')), 
+                 req.get('SoDienThoai'), req.get('Email'), req.get('ChieuCao'), req.get('CanNang'), 
+                 req.get('ThoiGianTap'), req.get('HangHoiVien'))
             )
             conn.commit()
             return jsonify({"success": True})
@@ -30,7 +31,8 @@ def handle_hoi_vien():
             cursor.close()
             conn.close()
 
-    cursor.execute("SELECT MemberId, MemberCode, FullName, DateOfBirth, Gender, Phone, Email FROM dbo.HoiVien WHERE IsActive=1")
+    # Lấy dữ liệu thật trực tiếp từ các cột vừa thêm trong SQL Server
+    cursor.execute("SELECT MemberId, MemberCode, FullName, DateOfBirth, Gender, Phone, Email, ChieuCao, CanNang, ThoiGianTap, HangHoiVien FROM dbo.HoiVien WHERE IsActive=1")
     rows = cursor.fetchall()
     
     data = []
@@ -42,7 +44,10 @@ def handle_hoi_vien():
             "NgaySinh": str(r.DateOfBirth),
             "SoDienThoai": r.Phone,
             "Email": getattr(r, 'Email', ''),
-            "ChieuCao": "N/A", "CanNang": "N/A", "ThoiGianTap": "N/A", "HangHoiVien": "Standard" # UI cần nhưng DB bỏ
+            "ChieuCao": r.ChieuCao or "N/A", 
+            "CanNang": r.CanNang or "N/A", 
+            "ThoiGianTap": r.ThoiGianTap or "N/A", 
+            "HangHoiVien": r.HangHoiVien or "Standard"
         })
     cursor.close()
     conn.close()
@@ -55,8 +60,8 @@ def update_hoi_vien():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            """UPDATE dbo.HoiVien SET FullName=?, Phone=?, Email=? WHERE MemberId=?""",
-            (req.get('HoTen'), req.get('SoDienThoai'), req.get('Email'), req.get('MaHV'))
+            """UPDATE dbo.HoiVien SET FullName=?, Phone=?, Email=?, ChieuCao=?, CanNang=?, ThoiGianTap=? WHERE MemberId=?""",
+            (req.get('HoTen'), req.get('SoDienThoai'), req.get('Email'), req.get('ChieuCao'), req.get('CanNang'), req.get('ThoiGianTap'), req.get('MaHV'))
         )
         conn.commit()
         return jsonify({"success": True})
@@ -83,7 +88,7 @@ def handle_goi_tap():
     if request.method == 'POST':
         req = request.json
         plan_code = f"PL{int(time.time())}"
-        duration_days = int(req.get('ThoiHan')) * 30 # Quy đổi tháng ra ngày
+        duration_days = int(req.get('ThoiHan')) * 30 
         try:
             cursor.execute(
                 """INSERT INTO dbo.GoiTap (PlanCode, PlanName, DurationDays, Price, Description) VALUES (?, ?, ?, ?, ?)""",
