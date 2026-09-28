@@ -43,7 +43,7 @@ Không triển khai theo số Issue một cách máy móc; triển khai theo dep
 
 ### Quyết định `Ready`, `In review`, `Done`
 
-- **TV1 chuyển sang `Ready`:** kiểm dependency đã merge vào `develop`, xác định owner và reviewer dự kiến, xác nhận không đụng script/contract đang bị Issue khác khóa.
+- **TV1 chuyển sang `Ready`:** kiểm dependency đã merge vào `develop`, xác định owner và reviewer dự kiến với Issue không thuộc TV1, xác nhận không đụng script/contract đang bị Issue khác khóa.
 - **Owner chuyển sang `In progress`:** sau commit đầu tiên trên task branch và ghi link branch vào Issue.
 - **TV1 chuyển sang `In review`:** owner đã mở PR vào `develop`, điền đầy đủ checklist test/rubric và không còn scope mới.
 - **TV1 xác nhận `Done`:** PR được merge, CI/test đạt, `Closes #...` đã đóng Issue và log bàn giao được cập nhật.
@@ -54,7 +54,7 @@ Trạng thái hiện tại: #1–#4 đã `Done`; #5 là `In progress` của TV2;
 
 | Ưu tiên | Issue | Ai thực hiện ngay | Phải xong để chuyển bước |
 |---|---|---|---|
-| P0 | [#13](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/13) - quy trình task branch | Một TV2/TV3/TV4 review [PR #14](https://github.com/vhoanglong54/DBMS_FINALPROJECT/pull/14); TV1 merge sau approval | PR #14 có CI xanh, không còn comment unresolved và có một approval độc lập. Đây là việc tích hợp rule, không phải module nghiệp vụ. |
+| P0 | [#13](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/13) - quy trình task branch | TV1 self-review [PR #14](https://github.com/vhoanglong54/DBMS_FINALPROJECT/pull/14) và merge | PR #14 có CI xanh, self-review/test đã ghi trên PR và không còn comment unresolved. Đây là việc tích hợp rule, không phải module nghiệp vụ. |
 | P1-A | [#5](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/5) - membership/billing DB | TV2 tiếp tục trên `feature/5-gym-05-membership-billing-db`; làm sạch `__pycache__`, đưa phần app về đúng kiến trúc ASP.NET Core, tách/đặt tên script theo module `a_membership_*`, rồi hoàn thiện SP/transaction/test | PR liên kết Issue #5 merge vào `develop`, SQL runner và 2 transaction/SP pass. |
 | P1-B | [#7](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/7) - class/booking/check-in DB | TV3 bắt đầu từ `feature/7-gym-07-classes-booking-checkin-db`; chỉ sửa module `b_operations_*`, triển khai room/class/session/booking/check-in, capacity và chống trùng lịch, kèm test | PR liên kết Issue #7 merge vào `develop`, test capacity/trùng lịch pass. |
 | P2 | [#6](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/6) và [#8](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/8) | TV2 chỉ mở #6 sau khi #5 `Done`; TV3 chỉ mở #8 sau khi #7 `Done` | UI phải gọi procedure/query thật đã merge, không dùng dữ liệu giả. |

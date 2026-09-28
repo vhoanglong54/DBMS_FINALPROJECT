@@ -10,7 +10,7 @@ assignees: ""
 
 - Thành viên: TVx - Họ tên/MSSV
 - GitHub assignee: @username
-- Reviewer dự kiến: TVx
+- Reviewer dự kiến: TVx (không áp dụng với Issue do TV1 sở hữu)
 
 ## Trạng thái
 

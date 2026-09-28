@@ -34,5 +34,5 @@ Lệnh/kịch bản và kết quả:
 
 - [ ] Scope đúng Issue; không thêm thay đổi ngoài phạm vi.
 - [ ] Owner đã cập nhật Issue thành `In review`.
-- [ ] Có ít nhất một reviewer khác author approve.
+- [ ] PR của TV2/TV3/TV4: có ít nhất một reviewer khác author approve; PR của TV1: self-review và kết quả test đã ghi trên PR.
 - [ ] Không còn comment unresolved.

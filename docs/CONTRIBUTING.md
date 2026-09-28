@@ -8,7 +8,7 @@ Mỗi Issue có một owner, phạm vi, dependency, Definition of Done và một
 
 Tạo Issue bằng mẫu `.github/ISSUE_TEMPLATE/task.md` và PR bằng `.github/pull_request_template.md`; không xóa checklist, chỉ đánh dấu sau khi đã kiểm chứng.
 
-Không push trực tiếp vào `main`/`develop`. Owner được push vào task branch của Issue mình phụ trách. Chỉ TV1 được merge sau Pull Request (PR) có checklist xanh và tối thiểu một người review. Không force-push `main`, `develop` hoặc branch đã có PR review.
+Không push trực tiếp vào `main`/`develop`. Owner được push vào task branch của Issue mình phụ trách. Chỉ TV1 được merge. PR của TV2/TV3/TV4 cần checklist xanh và tối thiểu một approval độc lập; PR do TV1 sở hữu không cần approval từ thành viên khác nhưng bắt buộc self-review, CI xanh và checklist đầy đủ. Không force-push `main`, `develop` hoặc branch đã có PR review.
 
 ### Khi nào tạo branch
 
@@ -53,8 +53,8 @@ Trước PR phải chạy bộ script SQL sạch, kiểm tra module app liên qu
 1. Owner mở draft PR sớm khi đã có lát cắt chạy được; PR base luôn là `develop`, head là branch của chính Issue. Đổi Issue sang `In review` chỉ khi scope đã hoàn chỉnh.
 2. PR tiêu đề là `[GYM-XX][TVx] <mô tả ngắn>`. Phần đầu mô tả phải là `Closes #<issue-number>`, tiếp theo là: thay đổi chính, bảng/cột/SP/View/API/UI ảnh hưởng, migration/run order, test đã chạy, bằng chứng rubric, rủi ro/rollback.
 3. Trước khi xin review, owner tự kiểm: `git diff origin/develop...HEAD`, không conflict, không file cấm, CI xanh; chạy clean SQL runner cho thay đổi database và test/build module app liên quan.
-4. Reviewer phải là người khác author. Reviewer kiểm scope Issue, contract, quyền/security, test và khả năng rollback; comment `Approve` chỉ khi checklist đầy đủ. PR của TV1 bắt buộc do TV2/TV3/TV4 review; TV1 không tự approve PR của mình.
-5. TV1 chỉ merge khi CI xanh, có ít nhất một approval và không có comment unresolved. Dùng squash merge nếu commit nhỏ/không cần giữ lịch sử nội bộ; dùng merge commit khi cần giữ chuỗi migration rõ ràng. Không rebase/force-push một PR đã được duyệt.
+4. Với PR của TV2/TV3/TV4, reviewer phải là người khác author và kiểm scope Issue, contract, quyền/security, test và khả năng rollback; chỉ `Approve` khi checklist đầy đủ. Với PR của TV1, TV1 tự review theo cùng checklist, ghi kết quả test vào PR và không cần approval từ thành viên khác.
+5. TV1 merge PR của TV2/TV3/TV4 khi CI xanh, có ít nhất một approval độc lập và không có comment unresolved. TV1 merge PR của chính mình khi CI xanh, self-review đã ghi trên PR và không có comment unresolved. Dùng squash merge nếu commit nhỏ/không cần giữ lịch sử nội bộ; dùng merge commit khi cần giữ chuỗi migration rõ ràng. Không rebase/force-push một PR đã được duyệt.
 6. Sau merge: GitHub đóng Issue bằng `Closes #...`; TV1 xác nhận `develop`, cập nhật `TEAM_TASKS.md` và `HANDOFF_LOG.md`, rồi xóa remote branch. Lỗi sau merge mở Issue mới, không reopen/sửa lén Issue đã Done.
 
 ## Quy tắc SQL Server
