@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý Hội viên & Thanh toán - Gym Management</title>
+  
+  <!-- KẾT NỐI ĐẾN FILE CSS TRONG STATIC -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- MÀN HÌNH ĐĂNG NHẬP -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div class="brand-icon" style="width: 48px; height: 48px; margin: 0 auto 12px; font-size: 20px;">🏋️</div>
+        <h2 style="font-size: 20px; font-weight: 700; color: var(--text-dark);">GYM MANAGEMENT</h2>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Hệ thống Quản lý Phòng Gym</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tài khoản đăng nhập</label>
+        <input type="text" id="loginUser" class="form-control" value="thanhtam1710" placeholder="vd: thanhtam1710">
+      </div>
+      <div class="form-group" style="margin-bottom: 24px;">
+        <label class="form-label">Mật khẩu</label>
+        <input type="password" id="loginPass" class="form-control" value="1234" placeholder="••••">
+      </div>
+      <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="handleLogin()">Đăng nhập hệ thống</button>
+    </div>
+  </div>
+
+  <div class="layout-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand-header">
+        <div class="brand-icon">🏋️</div>
+        <div class="brand-text">
+          <h2>GYM SYSTEM</h2>
+          <span>Membership & Billing</span>
+        </div>
+      </div>
+      
+      <div class="sidebar-content">
+        <div class="menu-title">Nghiệp vụ chính</div>
+        <a class="menu-item active" onclick="switchTab('tabHoiVien', this)">📋 Quản lý Hội viên (CRUD)</a>
+        <a class="menu-item" onclick="switchTab('tabDangKy', this)">💳 Đăng ký gói tập (Transaction)</a>
+        <a class="menu-item" onclick="switchTab('tabGoiTap', this)">🎁 Các gói tập ưu đãi</a>
+        <a class="menu-item" onclick="switchTab('tabBaoCao', this)">📊 Báo cáo hết hạn (View)</a>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="user-avatar" id="sidebarAvatar">TT</div>
+        <div class="user-meta">
+          <span class="user-name" id="sidebarName">Trần Phạm Hữu Thiên</span>
+          <span class="user-title">Quản trị viên / Nhân viên</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-wrapper">
+      <header class="header-bar">
+        <div class="header-heading">
+          <h1 id="pageTitle">Quản Lý Thông Tin Hội Viên</h1>
+        </div>
+        <div>
+          <button class="btn btn-outline" onclick="location.reload()">Đăng xuất</button>
+        </div>
+      </header>
+
+      <div class="page-content">
+        
+       <!-- TAB 1: QUẢN LÝ HỘI VIÊN (CRUD) -->
+        <div id="tabHoiVien" class="tab-pane active">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Danh sách Hội viên từ SQL Server</span>
+              <button class="btn btn-primary" onclick="openModal('modalThemHV')">+ Thêm hội viên mới</button>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Mã HV</th>
+                    <th>Họ tên</th>
+                    <th>Số điện thoại</th>
+                    <th>Email</th>
+                    <th>Thể hình (Cao/Nặng)</th>
+                    <th>Thời gian tập</th>
+                    <th>Hạng hội viên</th>
+                    <th>Thao tác chỉnh sửa</th>
+                  </tr>
+                </thead>
+                <tbody id="tableHoiVienBody">
+                  <!-- Dữ liệu nạp từ API -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- KHUNG XEM CHI TIẾT THÔNG TIN HỘI VIÊN (HIỆN LÊN KHI BẤM NÚT CHI TIẾT) -->
+          <div class="card" id="cardChiTietHV" style="display: none; margin-top: 24px; border-left: 4px solid var(--primary);">
+            <div class="card-header" style="background-color: var(--primary-light);">
+              <span class="card-title" id="tieuDeChiTietHV" style="color: var(--primary-hover);">Chi tiết Gói tập & Ưu đãi hội viên</span>
+              <button class="btn btn-outline" style="height: 30px; font-size: 12px;" onclick="dongChiTietHV()">Đóng ✕</button>
+            </div>
+            <div class="card-body">
+              <div style="margin-bottom: 20px;">
+                <h4 style="font-size: 13.5px; font-weight: 700; color: var(--text-dark); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Danh sách gói tập, ưu đãi & thời hạn (Datetime)</h4>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Mã ĐK</th>
+                      <th>Tên Gói Tập</th>
+                      <th>Ưu đãi đặc biệt</th>
+                      <th>Ngày Bắt Đầu</th>
+                      <th>Ngày Hết Hạn (Datetime)</th>
+                      <th>Trạng thái thời hạn</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tableGoiChiTietHVBody">
+                    <!-- Chi tiết nạp qua AJAX -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: ĐĂNG KÝ GÓI TẬP (TRANSACTION) -->
+        <div id="tabDangKy" class="tab-pane">
+          <div class="card" style="max-width: 700px; margin: 0 auto;">
+            <div class="card-header">
+              <span class="card-title">Lập Hợp Đồng Đăng Ký & Thanh Toán (Transaction)</span>
+            </div>
+            <div class="card-body">
+              <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px;">
+                Thao tác này gọi Stored Procedure chứa khối <b>BEGIN TRANSACTION</b> dưới SQL Server.
+              </p>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Chọn Hội Viên (MaHV)</label>
+                  <select id="txMaHV" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Chọn Gói Tập (MaGoi)</label>
+                  <select id="txMaGoi" class="form-control"></select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Chọn Nhân Viên (MaNV)</label>
+                  <select id="txMaNV" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Phương thức thanh toán</label>
+                  <select id="txPTTT" class="form-control">
+                    <option value="Chuyển khoản">Chuyển khoản</option>
+                    <option value="Tiền mặt">Tiền mặt</option>
+                    <option value="Thẻ">Thẻ</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-top: 20px; text-align: right;">
+                <button class="btn btn-primary" onclick="submitTransaction()">Xác nhận Đăng ký & Thanh toán</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: CÁC GÓI TẬP ƯU ĐÃI -->
+        <div id="tabGoiTap" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Danh sách Các gói tập & Ưu đãi đặc biệt</span>
+              <button class="btn btn-primary" onclick="openModal('modalThemGoi')">+ Thêm ưu đãi</button>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Mã Gói</th>
+                    <th>Tên Gói Tập</th>
+                    <th>Thời hạn tập</th>
+                    <th>Giá tiền</th>
+                    <th>Ưu đãi đặc biệt (Nước, PT, Giờ tập)</th>
+                  </tr>
+                </thead>
+                <tbody id="tableGoiTapBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: BÁO CÁO HẾT HẠN (VIEW) -->
+        <div id="tabBaoCao" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Danh sách Hội viên sắp hết hạn gói tập (Truy vấn từ View SQL)</span>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Mã HV</th>
+                    <th>Họ tên</th>
+                    <th>Số điện thoại</th>
+                    <th>Gói tập</th>
+                    <th>Ngày hết hạn</th>
+                    <th>Còn lại</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBaoCaoBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: THÊM HỘI VIÊN MỚI -->
+  <div class="modal-overlay" id="modalThemHV">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Thêm hội viên mới</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalThemHV')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Họ và tên</label>
+            <input type="text" id="inputHoTen" class="form-control" placeholder="vd: Nguyễn Văn A">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Số điện thoại</label>
+            <input type="text" id="inputSdt" class="form-control" placeholder="vd: 0901234567">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Ngày sinh</label>
+            <input type="date" id="inputNgaySinh" class="form-control" value="2000-01-01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Giới tính</label>
+            <select id="inputGioiTinh" class="form-control">
+              <option value="Nam">Nam</option>
+              <option value="Nữ">Nữ</option>
+              <option value="Khác">Khác</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="inputEmail" class="form-control" placeholder="vd: an.nv@gmail.com">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Chiều cao (cm)</label>
+            <input type="number" id="inputChieuCao" class="form-control" placeholder="vd: 175">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cân nặng (kg)</label>
+            <input type="number" id="inputCanNang" class="form-control" placeholder="vd: 70">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Thời gian tập thường xuyên</label>
+            <select id="inputThoiGianTap" class="form-control">
+              <option value="06:00 - 09:00">Ca sáng (06:00 - 09:00)</option>
+              <option value="13:00 - 16:00">Ca chiều (13:00 - 16:00)</option>
+              <option value="17:00 - 20:00">Ca tối (17:00 - 20:00)</option>
+              <option value="Linh hoạt">Linh hoạt cả ngày</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hạng hội viên</label>
+            <select id="inputHangHV" class="form-control">
+              <option value="Standard">Standard</option>
+              <option value="VIP Silver">VIP Silver</option>
+              <option value="VIP Gold">VIP Gold</option>
+              <option value="Diamond">Diamond</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalThemHV')">Đóng</button>
+        <button class="btn btn-primary" onclick="addHoiVien()">Lưu hội viên</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: THÊM GÓI TẬP / ƯU ĐÃI MỚI -->
+  <div class="modal-overlay" id="modalThemGoi">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Thêm gói tập & Ưu đãi mới</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalThemGoi')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Tên gói tập</label>
+          <input type="text" id="inputTenGoi" class="form-control" placeholder="vd: Gói VIP 6 Tháng">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Thời hạn (tháng)</label>
+            <input type="number" id="inputThoiHan" class="form-control" value="6">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Giá tiền (VNĐ)</label>
+            <input type="number" id="inputGiaGoi" class="form-control" placeholder="vd: 2500000">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ưu đãi đặc biệt</label>
+          <input type="text" id="inputUuDai" class="form-control" placeholder="vd: Miễn phí nước, Không giới hạn thời gian, Có PT hỗ trợ">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalThemGoi')">Đóng</button>
+        <button class="btn btn-primary" onclick="addGoiTap()">Lưu gói ưu đãi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SỬA / XÓA HỘI VIÊN -->
+  <div class="modal-overlay" id="modalSuaHV">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Cập nhật / Xóa thông tin hội viên</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalSuaHV')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Họ và tên</label>
+            <input type="text" id="editHoTen" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Số điện thoại</label>
+            <input type="text" id="editSdt" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="editEmail" class="form-control">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Chiều cao (cm)</label>
+            <input type="number" id="editChieuCao" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cân nặng (kg)</label>
+            <input type="number" id="editCanNang" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Thời gian tập thường xuyên</label>
+          <select id="editThoiGianTap" class="form-control">
+            <option value="06:00 - 09:00">Ca sáng (06:00 - 09:00)</option>
+            <option value="13:00 - 16:00">Ca chiều (13:00 - 16:00)</option>
+            <option value="17:00 - 20:00">Ca tối (17:00 - 20:00)</option>
+            <option value="Linh hoạt">Linh hoạt cả ngày</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between;">
+        <button class="btn btn-danger" onclick="deleteHoiVien()">Xóa hội viên</button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" onclick="closeModal('modalSuaHV')">Đóng</button>
+          <button class="btn btn-primary" onclick="updateHoiVien()">Lưu thay đổi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KẾT NỐI ĐẾN FILE JAVASCRIPT TRONG STATIC -->
+  <script src="{{ url_for('static', filename='js/membership.js') }}"></script>
+</body>
+</html>
