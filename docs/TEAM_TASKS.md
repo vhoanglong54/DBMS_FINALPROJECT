@@ -50,6 +50,19 @@ Không triển khai theo số Issue một cách máy móc; triển khai theo dep
 
 Trạng thái hiện tại: #1–#4 đã `Done`; #5 là `In progress` của TV2; #7 là `Ready` của TV3. Các Issue còn lại giữ `Backlog`, không có branch và chưa được phép bắt đầu.
 
+## Ưu tiên hiện tại: làm theo thứ tự này
+
+| Ưu tiên | Issue | Ai thực hiện ngay | Phải xong để chuyển bước |
+|---|---|---|---|
+| P0 | [#13](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/13) - quy trình task branch | Một TV2/TV3/TV4 review [PR #14](https://github.com/vhoanglong54/DBMS_FINALPROJECT/pull/14); TV1 merge sau approval | PR #14 có CI xanh, không còn comment unresolved và có một approval độc lập. Đây là việc tích hợp rule, không phải module nghiệp vụ. |
+| P1-A | [#5](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/5) - membership/billing DB | TV2 tiếp tục trên `feature/5-gym-05-membership-billing-db`; làm sạch `__pycache__`, đưa phần app về đúng kiến trúc ASP.NET Core, tách/đặt tên script theo module `a_membership_*`, rồi hoàn thiện SP/transaction/test | PR liên kết Issue #5 merge vào `develop`, SQL runner và 2 transaction/SP pass. |
+| P1-B | [#7](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/7) - class/booking/check-in DB | TV3 bắt đầu từ `feature/7-gym-07-classes-booking-checkin-db`; chỉ sửa module `b_operations_*`, triển khai room/class/session/booking/check-in, capacity và chống trùng lịch, kèm test | PR liên kết Issue #7 merge vào `develop`, test capacity/trùng lịch pass. |
+| P2 | [#6](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/6) và [#8](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/8) | TV2 chỉ mở #6 sau khi #5 `Done`; TV3 chỉ mở #8 sau khi #7 `Done` | UI phải gọi procedure/query thật đã merge, không dùng dữ liệu giả. |
+| P3 | [#9](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/9), [#10](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/10), [#11](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/11) | TV4/TV1 chỉ chuyển các Issue này sang `Ready` khi #5 và #7 đã `Done` | Có reporting trên dữ liệu thật, UX evidence, và bằng chứng rollback/concurrency/security. |
+| P4 | [#12](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/12) | Cả nhóm chỉ bắt đầu khi #6, #8, #9, #10, #11 `Done` | Schema freeze, báo cáo/slide/demo hoàn chỉnh. |
+
+**Không được bắt đầu lúc này:** #6, #8, #9, #10, #11, #12. Chỉ P1-A và P1-B được code song song; P0 là cổng duyệt để đưa bộ rule vào nhánh chung.
+
 ## Quy tắc cập nhật tiến độ
 
 - Mỗi người chỉ có một Issue `In progress` tại một thời điểm.
