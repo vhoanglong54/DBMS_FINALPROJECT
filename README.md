@@ -15,14 +15,14 @@ Tài liệu bắt đầu tại [kiến trúc & luồng nghiệp vụ](docs/ARCHI
 ```text
 database/       SQL Server scripts nền, security, seed và smoke test
 src/GymManagement.Web/  ASP.NET Core MVC .NET 8, đăng nhập và role authorization
-docs/           Thiết kế, kiểm thử, báo cáo và slide
-tests/          Unit test và bằng chứng SQL/hiệu năng/concurrency
+docs/           Thiết kế, rule Git, giao việc, handoff và rubric
+tests/          Unit test và SQL test
 ```
 
 ## Quy trình nhanh
 
 1. Leader cập nhật tên nhóm và danh sách thành viên trong `docs/TEAM_TASKS.md`.
-2. Mỗi thành viên checkout `tv1`, `tv2`, `tv3` hoặc `tv4`; đọc `docs/TEAM_TASKS.md`, `docs/CONTRIBUTING.md` trước khi code và cập nhật `docs/HANDOFF_LOG.md` sau mỗi task.
+2. Mỗi thành viên chọn một Issue ở trạng thái `Ready`, tạo task branch từ `develop` theo `feature/<issue-number>-gym-xx-short-name`, đọc `docs/TEAM_TASKS.md` và `docs/CONTRIBUTING.md` trước khi code.
 3. Dựng database: `.\database\run-tv1.ps1 -Server '.\SQLEXPRESS' -DatabaseName 'GymManagementDB'`.
 4. Cấu hình connection string ngoài source:
 
@@ -31,7 +31,7 @@ tests/          Unit test và bằng chứng SQL/hiệu năng/concurrency
    ```
 
 5. Chạy `dotnet restore`, `dotnet test GymManagement.sln`, sau đó `dotnet run --project src/GymManagement.Web`.
-6. Tạo Pull Request vào `develop`, có checklist test và ít nhất một reviewer; chỉ leader merge `develop` vào `main` sau khi demo end-to-end thành công.
+6. Push task branch, tạo Pull Request vào `develop` với `Closes #<issue-number>`, rồi cập nhật `docs/HANDOFF_LOG.md` sau khi task đã được merge. Chỉ leader merge `develop` vào `main` sau khi demo end-to-end thành công.
 
 ## Phạm vi v1
 

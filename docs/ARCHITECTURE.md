@@ -110,7 +110,7 @@ Các role: `rl_GymAdmin` (toàn quyền), `rl_LeTan` (hội viên, đăng ký, b
 
 ## 7. Kiểm thử và bằng chứng bảo vệ
 
-- Mỗi procedure có test thành công và test rollback/lỗi; lưu script và ảnh kết quả trong `tests/`/`docs/evidence/`.
+- Mỗi procedure có test thành công và test rollback/lỗi; lưu script tái tạo trong `tests/` và đính kèm ảnh/kết quả thật vào PR liên quan.
 - Kiểm thử quyền bằng từng login mẫu: một thao tác được phép và một thao tác bị `DENY`.
 - Index: chạy cùng truy vấn trước/sau index, lưu Actual Execution Plan và `SET STATISTICS IO, TIME ON`.
 - Demo: cấu hình connection string, đăng nhập, làm xuyên suốt đăng ký → thanh toán → đặt lớp → check-in → báo cáo; không dùng ảnh/dữ liệu giả thay cho kết nối trực tiếp.

@@ -2,7 +2,7 @@ name: build-and-test
 
 on:
   push:
-    branches: [main, develop, tv1, tv2, tv3, tv4]
+    branches: [main, develop, 'feature/**']
   pull_request:
     branches: [main, develop]
 
