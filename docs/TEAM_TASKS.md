@@ -28,12 +28,35 @@ Mỗi dòng dưới đây liên kết trực tiếp tới GitHub Issue tương �
 | [#11](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/11) | GYM-11 | Benchmark index, test rollback/concurrency/security | TV1 điều phối; TV2/TV3 thực hiện | Backlog | GYM-05, GYM-07 | `feature/<issue>-gym-11-verification` | evidence lưu repo |
 | [#12](https://github.com/vhoanglong54/DBMS_FINALPROJECT/issues/12) | GYM-12 | Báo cáo 50-100 trang, slide <=15, rehearsal Q&A | TV1 điều phối; cả nhóm | Backlog | tất cả | `feature/<issue>-gym-12-delivery` | đủ artifact, mọi người demo được phần mình |
 
-## Nhịp quản lý của TV1
+## Thứ tự thực hiện và cổng duyệt
 
-- Đầu tuần: chốt mục tiêu tuần, giới hạn WIP 1 Issue/người, xác nhận dependency và chuyển đúng Issue sang `Ready`.
-- Giữa tuần: 15 phút blocker review; sự cố schema phải thông báo trước khi đổi contract.
-- Cuối tuần: demo trên `develop`; leader đối chiếu `RUBRIC_COMPLIANCE.md`, ghi rủi ro, merge PR đạt yêu cầu và đóng Issue tương ứng.
-- Trước bảo vệ: freeze schema; chạy clean install + demo kịch bản 6 phút; từng thành viên trả lời chéo 3 câu về module khác.
+Không triển khai theo số Issue một cách máy móc; triển khai theo dependency. Một Issue chỉ được TV1 chuyển sang `Ready` sau khi tất cả dependency trong bảng là `Done` trên `develop`, scope/DoD đã rõ và owner còn dưới giới hạn một Issue `In progress`.
+
+| Giai đoạn | Issue được phép làm song song | Cổng để chuyển sang giai đoạn sau |
+|---|---|---|
+| Nền tảng | #1, #2, #3, #4 | Đã xong: schema baseline, bảo mật và app foundation đã ở `develop`. |
+| Logic nghiệp vụ | #5 (TV2) và #7 (TV3) | Mỗi Issue có PR merge, smoke test SQL và test transaction/capacity đạt. |
+| UI vận hành | #6 (TV2) sau #5; #8 (TV3) sau #7 | UI gọi dữ liệu thật qua procedure/query đã review, không dùng dữ liệu giả. |
+| Báo cáo và trải nghiệm | #9 (TV4) sau #5 + #7; #10 (TV4) sau các màn hình liên quan | View/function/report chạy trên schema đã merge; UX và ảnh minh chứng đạt checklist. |
+| Xác minh tích hợp | #11 (TV1 điều phối, TV2/TV3 thực hiện) sau #5 + #7 | Bằng chứng rollback, concurrency, security và index có thể chạy lại. |
+| Bàn giao | #12 (cả nhóm) sau #6, #8, #9, #10, #11 | Freeze schema, artifact đủ, rehearsal/demo đạt. |
+
+### Quyết định `Ready`, `In review`, `Done`
+
+- **TV1 chuyển sang `Ready`:** kiểm dependency đã merge vào `develop`, xác định owner và reviewer dự kiến, xác nhận không đụng script/contract đang bị Issue khác khóa.
+- **Owner chuyển sang `In progress`:** sau commit đầu tiên trên task branch và ghi link branch vào Issue.
+- **TV1 chuyển sang `In review`:** owner đã mở PR vào `develop`, điền đầy đủ checklist test/rubric và không còn scope mới.
+- **TV1 xác nhận `Done`:** PR được merge, CI/test đạt, `Closes #...` đã đóng Issue và log bàn giao được cập nhật.
+
+Trạng thái hiện tại: #1–#4 đã `Done`; #5 là `In progress` của TV2; #7 là `Ready` của TV3. Các Issue còn lại giữ `Backlog`, không có branch và chưa được phép bắt đầu.
+
+## Quy tắc cập nhật tiến độ
+
+- Mỗi người chỉ có một Issue `In progress` tại một thời điểm.
+- Khi bị blocker do dependency hoặc contract, owner ghi ngay vào Issue và không tự đổi schema/script thuộc module của người khác.
+- Mọi thay đổi đã merge phải được phản ánh vào trạng thái trong bảng này, GitHub Issue và `HANDOFF_LOG.md`.
+- Không có PR, CI/test và approval thì không được đánh dấu `Done`.
+- Chỉ sau #6, #8, #9, #10 và #11 đều `Done` mới freeze schema và bắt đầu #12.
 
 ## Trách nhiệm báo cáo và bảo vệ
 
