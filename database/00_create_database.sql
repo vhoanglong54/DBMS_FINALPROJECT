@@ -1,3 +1,4 @@
+:setvar DatabaseName "GymManagementDB"
 USE [master];
 GO
 

@@ -13,11 +13,14 @@ $scriptDirectory = $PSScriptRoot
 $sqlcmd = Get-Command sqlcmd -ErrorAction Stop
 
 $scripts = @(
-    '00_create_database.sql',
-    '01_schema.sql',
-    '08_security.sql',
-    '09_seed_demo.sql',
-    '10_smoke_tests.sql'
+    
+    '02a_membership_constraints.sql',
+    '03a_membership_triggers.sql',
+    '04a_membership_views.sql',
+    '05a_membership_indexes.sql',
+    '06a_membership_procedures.sql',
+    '07a_membership_functions.sql',
+    '10a_membership_smoke_tests.sql'
 )
 
 $sqlVariables = @(
@@ -38,9 +41,9 @@ foreach ($scriptName in $scripts) {
     if (-not (Test-Path -LiteralPath $scriptPath)) {
         throw "Không tìm thấy script bắt buộc: $scriptPath"
     }
-
     Write-Host "Running $scriptName on $Server / $DatabaseName..."
-    & $sqlcmd.Source -S $Server -E -b -r 1 -i $scriptPath -v $sqlVariables
+    & $sqlcmd.Source -S $Server -E -b -r 1 -i $scriptPath -v $sqlVariables -f 65001
+
     if ($LASTEXITCODE -ne 0) {
         throw "Script $scriptName thất bại với exit code $LASTEXITCODE."
     }
