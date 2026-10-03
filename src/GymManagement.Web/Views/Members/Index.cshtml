@@ -1,0 +1,71 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Quản lý Hội viên";
+}
+
+<div style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <span style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">DANH MỤC</span>
+            <h1 style="font-size: 1.75rem; color: #1e293b; margin: 0;">Quản lý Hội viên</h1>
+        </div>
+        <a asp-action="Create" class="button" style="text-decoration: none; background-color: #2563eb; color: white; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 500;">Thêm hội viên mới</a>
+    </div>
+
+    <!-- Hiển thị thông báo lỗi nếu có (ví dụ: vướng ràng buộc khi xóa) -->
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div style="background-color: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 500; border: 1px solid #f87171;">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden; padding: 1.5rem;">
+        @if (Model != null && Model.Any())
+        {
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #e2e8f0; color: #475569; font-size: 0.9rem;">
+                        <th style="padding: 1rem;">Họ và tên</th>
+                        <th style="padding: 1rem;">Số điện thoại</th>
+                        <th style="padding: 1rem;">Email</th>
+                        <th style="padding: 1rem;">Ngày sinh</th>
+                        <th style="padding: 1rem;">Giới tính</th>
+                        <th style="padding: 1rem; text-align: center;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var member in Model)
+                    {
+                        <tr style="border-bottom: 1px solid #f1f5f9; color: #334155;">
+                            <td style="padding: 1rem; font-weight: 500;">@member.FullName</td>
+                            <td style="padding: 1rem;">@member.Phone</td>
+                            <td style="padding: 1rem;">@member.Email</td>
+                            <td style="padding: 1rem;">@member.DateOfBirth.ToString("dd/MM/yyyy")</td>
+                            <td style="padding: 1rem;">@member.Gender</td>
+                            <td style="padding: 1rem; text-align: center;">
+                                <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                    <!-- Nút chuyển hướng sang trang xem chi tiết & billing -->
+                                    <a asp-action="Details" asp-route-id="@member.Id" style="background-color: #0284c7; color: white; padding: 0.4rem 0.8rem; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 500;">Chi tiết</a>
+                                    
+                                    <!-- Form thực hiện hành động xóa hội viên -->
+                                    <form asp-action="Delete" asp-route-id="@member.Id" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa hội viên này không?');" style="margin: 0;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" style="background-color: #dc2626; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500;">Xóa</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="text-align: center; padding: 3rem; color: #64748b;">
+                <p style="font-size: 1.1rem; margin-bottom: 1rem;">Chưa có hội viên nào trong cơ sở dữ liệu.</p>
+                <a asp-action="Create" style="color: #2563eb; text-decoration: underline; font-weight: 500;">Thêm hội viên đầu tiên ngay</a>
+            </div>
+        }
+    </div>
+</div>

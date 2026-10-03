@@ -1,0 +1,34 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Chi tiết Hội viên & Billing";
+}
+
+<div style="padding: 2rem; max-width: 900px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <span style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">QUẢN LÝ HÓA ĐƠN & BILLING</span>
+            <h1 style="font-size: 1.75rem; color: #1e293b; margin: 0;">Hồ sơ chi tiết hội viên</h1>
+        </div>
+        <a asp-action="Index" style="background-color: #e2e8f0; color: #334155; padding: 0.6rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 500;">Quay lại danh sách</a>
+    </div>
+
+    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 2rem; margin-bottom: 2rem;">
+        <h3 style="margin-top: 0; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 1rem;">Thông tin cá nhân</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; color: #334155;">
+            <p><strong>Mã hội viên:</strong> @Model.Id</p>
+            <p><strong>Họ và tên:</strong> @Model.FullName</p>
+            <p><strong>Số điện thoại:</strong> @Model.Phone</p>
+            <p><strong>Email:</strong> @(string.IsNullOrEmpty(Model.Email) ? "Không có" : Model.Email)</p>
+            <p><strong>Ngày sinh:</strong> @Model.DateOfBirth.ToString("dd/MM/yyyy")</p>
+            <p><strong>Giới tính:</strong> @Model.Gender</p>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 1rem;">
+            <h3 style="margin: 0; color: #1e293b;">Lịch sử hóa đơn & Gói tập (Billing)</h3>
+            <button type="button" style="background-color: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500;">+ Lập hóa đơn mới</button>
+        </div>
+        <p style="color: #64748b; font-style: italic; text-align: center; padding: 2rem 0;">Chưa có giao dịch thanh toán hoặc gói tập nào được ghi nhận cho hội viên này.</p>
+    </div>
+</div>
