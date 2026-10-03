@@ -1,4 +1,4 @@
-USE [$(DatabaseName)];
+USE GymManagementDB;
 GO
 
 SET ANSI_NULLS ON;
@@ -10,7 +10,6 @@ ON dbo.HoiVien
 INSTEAD OF DELETE 
 AS
 BEGIN
-    -- Đảm bảo bật SET bên trong trigger
     SET ANSI_NULLS ON;
     SET QUOTED_IDENTIFIER ON;
     SET NOCOUNT ON;

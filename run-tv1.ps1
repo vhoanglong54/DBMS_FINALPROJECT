@@ -13,14 +13,13 @@ $scriptDirectory = $PSScriptRoot
 $sqlcmd = Get-Command sqlcmd -ErrorAction Stop
 
 $scripts = @(
-    
-    '02a_membership_constraints.sql',
-    '03a_membership_triggers.sql',
-    '04a_membership_views.sql',
-    '05a_membership_indexes.sql',
-    '06a_membership_procedures.sql',
-    '07a_membership_functions.sql',
-    '10a_membership_smoke_tests.sql'
+    'database\02a_membership_constraints.sql',
+    'database\03a_membership_triggers.sql',
+    'database\04a_membership_views.sql',
+    'database\05a_membership_indexes.sql',
+    'database\06a_membership_procedures.sql',
+    'database\07a_membership_functions.sql',
+    'database\10_smoke_tests.sql'
 )
 
 $sqlVariables = @(

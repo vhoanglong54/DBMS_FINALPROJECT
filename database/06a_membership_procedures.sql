@@ -1,11 +1,10 @@
-USE [$(DatabaseName)];
+USE GymManagementDB;
 GO
 
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
 
--- 1. Đăng ký gói & Thanh toán (Giao dịch ACID)
 CREATE OR ALTER PROCEDURE dbo.sp_DangKyGoiTapMoi
     @MemberId INT,
     @PlanId INT,
@@ -26,7 +25,6 @@ BEGIN
         SELECT @DurationDays = DurationDays, @Price = Price FROM dbo.GoiTap WHERE PlanId = @PlanId;
         IF @Price IS NULL THROW 53001, N'Gói tập không hợp lệ', 1;
 
-        -- Kiểm tra xem hội viên đã có gói ACTIVE chưa
         IF EXISTS (SELECT 1 FROM dbo.DangKyGoi WHERE MemberId = @MemberId AND Status = 'ACTIVE' AND EndDate >= @StartDate)
             THROW 51200, N'Hội viên đang có gói tập ACTIVE. Yêu cầu hủy gói cũ trước khi đăng ký!', 1;
 
@@ -54,7 +52,6 @@ BEGIN
 END;
 GO
 
--- 2. Hủy gói tập
 CREATE OR ALTER PROCEDURE dbo.sp_HuyGoiTap
     @MembershipId BIGINT,
     @Reason NVARCHAR(500) = NULL
@@ -70,7 +67,6 @@ BEGIN
 END;
 GO
 
--- 3. Cập nhật thông tin thể hình hội viên
 CREATE OR ALTER PROCEDURE dbo.sp_CapNhatTheHinh
     @MemberId INT,
     @ChieuCao INT,
@@ -88,7 +84,6 @@ BEGIN
 END;
 GO
 
--- 4. Tạo gói tập mới
 CREATE OR ALTER PROCEDURE dbo.sp_TaoGoiTap
     @PlanCode VARCHAR(20),
     @PlanName NVARCHAR(120),
@@ -101,7 +96,6 @@ BEGIN
     SET QUOTED_IDENTIFIER ON;
     SET NOCOUNT ON;
     
-    -- Ép kiểu NVARCHAR tường minh cho tên gói
     DECLARE @SafePlanName NVARCHAR(120) = CAST(@PlanName AS NVARCHAR(120));
     DECLARE @SafeDesc NVARCHAR(500) = CAST(@Description AS NVARCHAR(500));
 
@@ -110,7 +104,6 @@ BEGIN
 END;
 GO
 
--- 5. Thêm hội viên mới (Ép kiểu NVARCHAR tường minh chống lỗi font tiếng Việt)
 CREATE OR ALTER PROCEDURE dbo.sp_ThemHoiVien
     @FullName NVARCHAR(120),
     @Phone VARCHAR(15),
@@ -124,8 +117,6 @@ BEGIN
     SET NOCOUNT ON;
     
     DECLARE @MemCode VARCHAR(20) = 'HV-' + RIGHT(CAST(NEWID() AS VARCHAR(36)), 8);
-    
-    -- Ép kiểu tường minh NVARCHAR để giữ nguyên dấu tiếng Việt khi chạy qua sqlcmd
     DECLARE @SafeFullName NVARCHAR(120) = CAST(@FullName AS NVARCHAR(120));
     
     INSERT INTO dbo.HoiVien (MemberCode, FullName, Phone, Email, DateOfBirth, Gender)

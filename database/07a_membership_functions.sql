@@ -1,11 +1,10 @@
-USE [$(DatabaseName)];
+USE GymManagementDB;
 GO
 
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
 
--- 1. Tính tổng doanh thu từ một hội viên
 CREATE OR ALTER FUNCTION dbo.fn_TongDoanhThuHoiVien(@MemberId INT) 
 RETURNS DECIMAL(18,2) 
 AS
@@ -20,7 +19,6 @@ BEGIN
 END;
 GO
 
--- 2. Tính hạng hội viên tự động dựa trên mức chi tiêu
 CREATE OR ALTER FUNCTION dbo.fn_XepHangHoiVien(@MemberId INT) 
 RETURNS VARCHAR(20) 
 AS

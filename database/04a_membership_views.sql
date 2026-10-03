@@ -1,4 +1,4 @@
-USE [$(DatabaseName)];
+USE GymManagementDB;
 GO
 
 CREATE OR ALTER VIEW dbo.vw_HoiVienSapHetHan

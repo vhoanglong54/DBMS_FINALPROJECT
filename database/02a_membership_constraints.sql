@@ -1,7 +1,6 @@
-USE [$(DatabaseName)];
+USE GymManagementDB;
 GO
 
--- Thêm các cột mới cho phân hệ Membership nếu chưa tồn tại
 IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.HoiVien') AND name = 'ChieuCao')
     ALTER TABLE dbo.HoiVien ADD ChieuCao INT NULL;
 
@@ -15,7 +14,6 @@ IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('dbo.HoiVie
     ALTER TABLE dbo.HoiVien ADD HangHoiVien VARCHAR(20) NOT NULL CONSTRAINT DF_HoiVien_Hang DEFAULT ('Standard');
 GO
 
--- Ràng buộc dữ liệu hợp lệ
 IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_HoiVien_ChieuCao')
     ALTER TABLE dbo.HoiVien ADD CONSTRAINT CK_HoiVien_ChieuCao CHECK (ChieuCao IS NULL OR (ChieuCao BETWEEN 50 AND 250));
 
