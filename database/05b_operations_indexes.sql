@@ -1,6 +1,15 @@
 USE [$(DatabaseName)];
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+GO
+
 /*
     Không trùng PK/UNIQUE đã có. Các index phục vụ workload đọc nặng nhất:
     đếm chỗ đã đặt, kiểm tra trùng lịch, tra lịch sử check-in.
@@ -15,14 +24,12 @@ GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LichLop_RoomId_StartAt_EndAt')
     CREATE NONCLUSTERED INDEX IX_LichLop_RoomId_StartAt_EndAt
-        ON dbo.LichLop(RoomId, StartAt, EndAt)
-        INCLUDE (Status);
+        ON dbo.LichLop(RoomId, Status, StartAt, EndAt);
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LichLop_TrainerId_StartAt_EndAt')
     CREATE NONCLUSTERED INDEX IX_LichLop_TrainerId_StartAt_EndAt
-        ON dbo.LichLop(TrainerId, StartAt, EndAt)
-        INCLUDE (Status);
+        ON dbo.LichLop(TrainerId, Status, StartAt, EndAt);
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LichLop_StartAt_Status')

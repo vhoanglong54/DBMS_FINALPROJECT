@@ -143,7 +143,7 @@ topics = [
     (5,"Ứng dụng vận hành","UI quản lý phòng, loại lớp, lịch, booking, hàng chờ và check-in; lỗi nghiệp vụ hiển thị cho người dùng."),
     (5,"Dashboard và tìm kiếm","Dashboard tải dữ liệu theo vai trò; tìm hội viên phân trang và escape ký tự LIKE."),
     (5,"Báo cáo","Doanh thu, công suất lớp, điểm danh và hội viên sắp hết hạn đều lấy từ view/procedure."),
-    (5,"UX và xử lý lỗi","Layout responsive, validation hai lớp, anti-forgery, thông báo lỗi kết nối và health endpoint."),
+    (5,"UX và xử lý lỗi","Giao diện responsive theo chủ đề gym, điều hướng theo vai trò, validation hai lớp, anti-forgery, trạng thái tiếng Việt, thông báo lỗi kết nối và health endpoint."),
     (6,"Chiến lược kiểm thử","Kiểm thử gồm unit, clean-install SQL, smoke theo module, security, HTTP end-to-end, concurrency và index."),
     (6,"Kết quả clean install","Database kiểm thử đạt 15 bảng, 6 trigger, 9 view, 20 index, 42 procedure, 9 function và 5 role."),
     (6,"Kết quả end-to-end","Tạo hội viên, thanh toán gói, đặt lớp và check-in qua HTTP tạo đúng trạng thái ACTIVE, PAID, CONFIRMED."),
@@ -299,7 +299,7 @@ evidence=[["Tables","15"],["Trusted CHECK","43"],["Triggers","6"],["Views","9"],
 t=doc.add_table(rows=1,cols=2); t.style="Table Grid"; set_cell_text(t.rows[0].cells[0],"Hạng mục");set_cell_text(t.rows[0].cells[1],"Kết quả")
 for a,b in evidence:
     cells=t.add_row().cells;set_cell_text(cells[0],a);set_cell_text(cells[1],b)
-doc.add_paragraph("Concurrency: kết nối B chờ 4.835 giây; kết quả 1 CONFIRMED và 1 WAITLISTED. Index benchmark: logical reads LichLop giảm 18 xuống 3.")
+doc.add_paragraph("Concurrency: kết nối B chờ 4.835 giây; kết quả 1 CONFIRMED và 1 WAITLISTED. Index benchmark mới nhất: logical reads LichLop giảm 16 xuống 6 (62,5%).")
 
 doc.add_page_break(); doc.add_heading("PHỤ LỤC B. HƯỚNG DẪN DEMO",level=1)
 for step in ["Chạy database/run-database.ps1 với -DropExisting trên database demo.","Cấu hình ConnectionStrings:GymDb bằng User Secrets.","Đăng nhập bốn tài khoản và minh họa menu theo role.","Tạo hội viên, mua gói, trả một phần rồi trả đủ.","Tạo lịch, đặt hai hội viên vào lớp một chỗ để minh họa hàng chờ.","Check-in và mở dashboard/báo cáo.","Chạy security, concurrency và index scripts."]:

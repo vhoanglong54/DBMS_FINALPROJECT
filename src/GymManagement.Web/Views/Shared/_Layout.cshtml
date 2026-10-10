@@ -1,57 +1,89 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var reportType = Context.Request.Query["type"].ToString();
+    var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "Người dùng";
+    var userInitial = string.IsNullOrWhiteSpace(displayName) ? "G" : displayName.Trim()[..1].ToUpperInvariant();
+    var roleName = User.IsInRole(RoleCodes.Admin) ? "Quản trị viên"
+        : User.IsInRole(RoleCodes.Receptionist) ? "Lễ tân"
+        : User.IsInRole(RoleCodes.Accountant) ? "Kế toán"
+        : User.IsInRole(RoleCodes.Trainer) ? "Huấn luyện viên"
+        : "Người dùng";
+
+    string NavClass(string controller) =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
+            ? "nav-link active"
+            : "nav-link";
+
+    string ReportClass(string type) =>
+        string.Equals(currentController, "Reports", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(reportType, type, StringComparison.OrdinalIgnoreCase)
+            ? "nav-link active"
+            : "nav-link";
+}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"] - Gym Management</title>
+    <meta name="theme-color" content="#07110d" />
+    <meta name="description" content="Hệ thống quản lý hội viên, gói tập, lớp học và doanh thu phòng gym." />
+    <title>@ViewData["Title"] · Gym Manager</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/reporting.css" asp-append-version="true" />
 </head>
-<body>
+<body class="@(User.Identity?.IsAuthenticated == true ? "app-authenticated" : "app-guest")">
+    <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
     <header class="topbar">
-        <a class="brand" asp-controller="Home" asp-action="Index">Gym Management</a>
-        @if (User.Identity?.IsAuthenticated == true)
-        {
-            <nav aria-label="Điều hướng chính">
-                <a asp-controller="Home" asp-action="Index">Tổng quan</a>
-                @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist))
-                {
-                    <a asp-controller="Members" asp-action="Index">Hội viên</a>
-                    <a asp-controller="MemberSearch" asp-action="Index">Tra cứu hội viên</a>
-                }
-                @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist) || User.IsInRole(RoleCodes.Accountant))
-                {
-                    <a asp-controller="Memberships" asp-action="Index">Gói & thanh toán</a>
-                }
-                @if (User.IsInRole(RoleCodes.Admin))
-                {
-                    <a asp-controller="Plans" asp-action="Index">Danh mục gói</a>
-                }
-                @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Trainer) || User.IsInRole(RoleCodes.Receptionist))
-                {
-                    <a asp-controller="Operations" asp-action="Index">Vận hành lớp</a>
-                    <a asp-controller="Reports" asp-action="Index" asp-route-type="classes">Công suất lớp</a>
-                }
-                @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Accountant))
-                {
-                    <a asp-controller="Reports" asp-action="Index" asp-route-type="revenue">Doanh thu</a>
-                }
-            </nav>
-            <div class="user-menu">
-                <span>@User.FindFirst("display_name")?.Value</span>
-                <form asp-controller="Account" asp-action="Logout" method="post">
-                    <button class="button button-secondary" type="submit">Đăng xuất</button>
-                </form>
-            </div>
-        }
+        <div class="topbar-inner">
+            <a class="brand" asp-controller="Home" asp-action="Index" aria-label="Gym Manager - Trang tổng quan">
+                <span class="brand-mark" aria-hidden="true">G</span>
+                <span class="brand-copy"><strong>Gym Manager</strong><small>Vận hành thông minh</small></span>
+            </a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <nav class="primary-nav" aria-label="Điều hướng chính">
+                    <a class="@NavClass("Home")" asp-controller="Home" asp-action="Index" aria-current="@(currentController == "Home" ? "page" : null)">Tổng quan</a>
+                    @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist))
+                    {
+                        <a class="@NavClass("Members")" asp-controller="Members" asp-action="Index" aria-current="@(currentController == "Members" ? "page" : null)">Hội viên</a>
+                        <a class="@NavClass("MemberSearch")" asp-controller="MemberSearch" asp-action="Index" aria-current="@(currentController == "MemberSearch" ? "page" : null)">Tra cứu</a>
+                    }
+                    @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist) || User.IsInRole(RoleCodes.Accountant))
+                    {
+                        <a class="@NavClass("Memberships")" asp-controller="Memberships" asp-action="Index" aria-current="@(currentController == "Memberships" ? "page" : null)">Gói & thanh toán</a>
+                    }
+                    @if (User.IsInRole(RoleCodes.Admin))
+                    {
+                        <a class="@NavClass("Plans")" asp-controller="Plans" asp-action="Index" aria-current="@(currentController == "Plans" ? "page" : null)">Danh mục gói</a>
+                    }
+                    @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Trainer) || User.IsInRole(RoleCodes.Receptionist))
+                    {
+                        <a class="@NavClass("Operations")" asp-controller="Operations" asp-action="Index" aria-current="@(currentController == "Operations" ? "page" : null)">Vận hành lớp</a>
+                        <a class="@ReportClass("classes")" asp-controller="Reports" asp-action="Index" asp-route-type="classes">Công suất</a>
+                    }
+                    @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Accountant))
+                    {
+                        <a class="@ReportClass("revenue")" asp-controller="Reports" asp-action="Index" asp-route-type="revenue">Doanh thu</a>
+                    }
+                </nav>
+                <div class="user-menu">
+                    <span class="user-avatar" aria-hidden="true">@userInitial</span>
+                    <span class="user-identity"><strong>@displayName</strong><small>@roleName</small></span>
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        <button class="button button-secondary button-compact" type="submit">Đăng xuất</button>
+                    </form>
+                </div>
+            }
+        </div>
     </header>
 
-    <main class="container">
+    <main id="main-content" class="container" tabindex="-1">
         @RenderBody()
     </main>
 
     <footer>
-        DBMS330284 · Hệ thống quản lý phòng gym
+        <span>Gym Manager · Hệ thống quản lý phòng gym</span>
+        <span class="footer-status"><i aria-hidden="true"></i> Dữ liệu SQL Server</span>
     </footer>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

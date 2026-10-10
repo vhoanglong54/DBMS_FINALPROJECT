@@ -50,4 +50,22 @@ public sealed class OperationsIndexViewModel
     public IReadOnlyList<SessionRow> Sessions { get; init; } = [];
 }
 public sealed class SessionDetailsViewModel { public required SessionRow Session { get; init; } public IReadOnlyList<BookingRow> Bookings { get; init; } = []; }
-public sealed class CheckInViewModel { public int MemberId { get; set; } public long? SessionId { get; set; } public string Method { get; set; } = "FRONT_DESK"; public IReadOnlyList<CheckInRow> History { get; set; } = []; }
+public sealed class CheckInViewModel
+{
+    [Required(ErrorMessage = "Vui lòng nhập mã hội viên.")]
+    [StringLength(20)]
+    [RegularExpression(@"^[Hh][Vv]\d{4,}$", ErrorMessage = "Mã hội viên có dạng HV0001.")]
+    [Display(Name = "Mã hội viên")]
+    public string MemberCode { get; set; } = string.Empty;
+
+    [Range(1, long.MaxValue, ErrorMessage = "Mã buổi lớp phải là số dương.")]
+    [Display(Name = "Mã buổi lớp (không bắt buộc)")]
+    public long? SessionId { get; set; }
+
+    [Required]
+    [RegularExpression("^(FRONT_DESK|BARCODE|KIOSK)$")]
+    [Display(Name = "Phương thức")]
+    public string Method { get; set; } = "FRONT_DESK";
+
+    public IReadOnlyList<CheckInRow> History { get; set; } = [];
+}

@@ -15,5 +15,5 @@
 
 <div class="page-heading section-heading"><h2>Lịch sử gói tập</h2><a class="button" asp-controller="Memberships" asp-action="Create" asp-route-memberId="@m.Id">Đăng ký gói</a></div>
 <div class="table-card"><table><thead><tr><th>Gói</th><th>Bắt đầu</th><th>Kết thúc</th><th>Giá</th><th>Trạng thái</th></tr></thead><tbody>
-@foreach (var item in Model.Memberships) { <tr><td>@item.PlanName</td><td>@item.StartDate.ToString("dd/MM/yyyy")</td><td>@item.EndDate.ToString("dd/MM/yyyy")</td><td>@item.Price.ToString("N0") ₫</td><td>@item.Status</td></tr> }
+@foreach (var item in Model.Memberships) { <tr><td>@item.PlanName</td><td>@item.StartDate.ToString("dd/MM/yyyy")</td><td>@item.EndDate.ToString("dd/MM/yyyy")</td><td>@item.Price.ToString("N0") ₫</td><td><span class="status-pill @DisplayLabels.StatusCss(item.Status)">@DisplayLabels.Status(item.Status)</span></td></tr> }
 </tbody></table>@if(Model.Memberships.Count==0){<p class="empty-state">Chưa có gói tập.</p>}</div>

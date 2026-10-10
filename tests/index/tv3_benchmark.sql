@@ -51,7 +51,7 @@ GO
 CREATE NONCLUSTERED INDEX IX_DatLop_SessionId_Status
     ON dbo.DatLop(SessionId, Status) INCLUDE (MemberId, BookedAt);
 CREATE NONCLUSTERED INDEX IX_LichLop_RoomId_StartAt_EndAt
-    ON dbo.LichLop(RoomId, StartAt, EndAt) INCLUDE (Status);
+    ON dbo.LichLop(RoomId, Status, StartAt, EndAt);
 GO
 
 SET STATISTICS IO, TIME ON;

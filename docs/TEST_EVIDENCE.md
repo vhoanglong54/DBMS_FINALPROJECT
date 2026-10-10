@@ -16,7 +16,7 @@ Kết quả: PASS toàn bộ `10`, `10a`, `10b`, `10c`.
 
 ## Build và unit test
 
-`dotnet test GymManagement.sln --configuration Release`: build 0 warning/error; 16/16 test PASS.
+`dotnet test GymManagement.sln --configuration Release`: build 0 warning/error; 24/24 test PASS. Bộ test gồm validation model, policy phân quyền, đăng nhập, quy tắc mã hội viên và ánh xạ trạng thái thân thiện trên giao diện.
 
 ## End-to-end HTTP + SQL
 
@@ -29,6 +29,8 @@ Tạo hội viên HV000101
 → đặt buổi lớp SessionId=1, DatLop=CONFIRMED
 → check-in FRONT_DESK, tổng lượt CheckIn=1
 ```
+
+Kiểm thử cuối còn gửi POST thật từ giao diện với `MemberCode=HV0001`; controller phân giải mã công khai sang khóa nội bộ, procedure `sp_CheckIn_GhiNhan` tạo `CheckInId=1`, sau đó lịch sử trả đúng `HV0001`. Nhân viên không còn phải nhập `MemberId` nội bộ.
 
 ## Bảo mật
 
@@ -53,7 +55,7 @@ Chạy `tests/index/tv3_benchmark.sql` với 20.000 lịch demo. Truy vấn lọ
 
 | Trạng thái | Logical reads bảng `LichLop` |
 |---|---:|
-| Trước `IX_LichLop_RoomId_StartAt_EndAt` | 18 |
-| Sau index | 3 |
+| Trước `IX_LichLop_RoomId_StartAt_EndAt` | 16 |
+| Sau index | 6 |
 
-Logical reads giảm 83,3%. Script tự tạo lại index và dọn dữ liệu benchmark.
+Logical reads giảm 62,5%. Index đưa `Status` vào key sau `RoomId` để loại nhanh phần lớn lịch đã hủy trước khi xét khoảng thời gian. Script tự tạo lại index và dọn dữ liệu benchmark.

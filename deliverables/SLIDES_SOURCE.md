@@ -127,7 +127,7 @@ HV000101
 - Session B chờ 4,835 giây
 - Kết quả: 1 CONFIRMED + 1 WAITLISTED
 - Không overbooking
-- Logical reads `LichLop`: 18 → 3, giảm 83,3%
+- Logical reads `LichLop`: 16 → 6, giảm 62,5%
 
 ---
 
