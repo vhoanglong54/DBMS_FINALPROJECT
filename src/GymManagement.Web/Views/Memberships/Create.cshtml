@@ -1,0 +1,9 @@
+@model GymManagement.Web.Models.MembershipCreateViewModel
+@{ViewData["Title"]="Đăng ký gói tập";}
+<div class="page-heading"><div><p class="eyebrow">Giao dịch nghiệp vụ</p><h1>Đăng ký gói tập</h1></div></div>
+<form method="post" class="form-card"><div asp-validation-summary="ModelOnly" class="validation-summary"></div><div class="form-grid">
+<div><label asp-for="MemberId"></label><select asp-for="MemberId"><option value="0">-- Chọn hội viên --</option>@foreach(var x in Model.Members){<option value="@x.Id">@x.Label</option>}</select><span asp-validation-for="MemberId" class="field-validation"></span></div>
+<div><label asp-for="PlanId"></label><select asp-for="PlanId"><option value="0">-- Chọn gói --</option>@foreach(var x in Model.Plans){<option value="@x.Id">@x.Name — @x.Price.ToString("N0") ₫</option>}</select><span asp-validation-for="PlanId" class="field-validation"></span></div>
+<div><label asp-for="StartDate"></label><input asp-for="StartDate" type="date"/></div><div><label asp-for="InitialPayment"></label><input asp-for="InitialPayment" type="number" step="1000"/></div>
+<div><label asp-for="PaymentMethod"></label><select asp-for="PaymentMethod"><option value="">Chưa thanh toán</option><option value="CASH">Tiền mặt</option><option value="BANK_TRANSFER">Chuyển khoản</option><option value="CARD">Thẻ</option><option value="E_WALLET">Ví điện tử</option></select></div>
+<div><label asp-for="TransactionReference"></label><input asp-for="TransactionReference"/></div></div><div class="form-actions"><button class="button" type="submit">Tạo giao dịch</button><a class="button button-light" asp-action="Index">Hủy</a></div></form>

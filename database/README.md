@@ -1,20 +1,21 @@
 # SQL Server scripts
 
-TV1 sẽ tạo các file theo thứ tự dưới đây; mọi file cần idempotent hoặc có hướng dẫn chạy trên database mới.
+Chạy duy nhất runner tích hợp từ thư mục gốc:
 
-```text
-00_create_database.sql
-01_schema.sql
-02_constraints.sql
-03_triggers.sql
-04_views.sql
-05_indexes.sql
-06_procedures.sql
-07_functions.sql
-08_security.sql
-09_seed_demo.sql
-10_smoke_tests.sql
+```powershell
+.\database\run-database.ps1 -Server '.\SQLEXPRESS' -DatabaseName GymManagementDB -DropExisting
 ```
 
-Không ghi password thật vào script. Script security dùng login demo cục bộ hoặc biến placeholder có hướng dẫn rõ ràng.
+Thứ tự do runner quản lý: tạo database → schema/constraint → function → trigger/view/index → procedure → security → seed → smoke test. Tên database luôn truyền qua SQLCMD variable, không hard-code.
 
+Các nhóm file:
+
+- `00`–`01`: database và 15 bảng chuẩn hóa.
+- `02a`–`07a`: hội viên, gói tập, billing.
+- `02b`–`09b`: phòng/lớp/lịch, booking, check-in.
+- `04c`, `06c`, `08c`: dashboard và báo cáo.
+- `08*`: 5 role, `GRANT`, `DENY`, `REVOKE` và quyền execute.
+- `09*`: dữ liệu demo idempotent.
+- `10*`: kiểm thử tự động và gate rubric.
+
+`-DropExisting` xóa đúng database được truyền vào; không dùng trên dữ liệu cần giữ. Để demo bốn SQL login riêng, bật `-CreateDemoLogins` và truyền bốn mật khẩu không phải placeholder.

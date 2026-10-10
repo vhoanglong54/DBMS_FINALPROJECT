@@ -1,0 +1,3 @@
+@model GymManagement.Web.Models.RoomEditViewModel
+@{ViewData["Title"]=Model.Id is null?"Thêm phòng tập":"Cập nhật phòng tập";}
+<div class="page-heading"><h1>@ViewData["Title"]</h1></div><form method="post" class="form-card narrow"><input asp-for="Id" type="hidden"/><div asp-validation-summary="ModelOnly" class="validation-summary"></div><label asp-for="Code"></label><input asp-for="Code"/><label asp-for="Name"></label><input asp-for="Name"/><label asp-for="Capacity"></label><input asp-for="Capacity" type="number"/><label asp-for="Location"></label><input asp-for="Location"/><div class="form-actions"><button class="button">Lưu</button><a class="button button-light" asp-action="Index">Hủy</a></div></form>

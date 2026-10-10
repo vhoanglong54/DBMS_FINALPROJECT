@@ -1,0 +1,11 @@
+@model int
+@{
+    ViewData["Title"] = $"Lỗi {Model}";
+}
+
+<section class="message-card">
+    <p class="eyebrow">@Model</p>
+    <h1>Không thể truy cập tài nguyên</h1>
+    <p>Đường dẫn không tồn tại hoặc yêu cầu không hợp lệ.</p>
+    <a class="button" asp-controller="Home" asp-action="Index">Về trang tổng quan</a>
+</section>

@@ -1,0 +1,73 @@
+@model DashboardViewModel
+@using GymManagement.Web.Authorization
+@{
+    ViewData["Title"] = "Tổng quan";
+    var isAdmin = User.IsInRole(RoleCodes.Admin);
+    var showMembers = isAdmin || User.IsInRole(RoleCodes.Receptionist);
+    var showFinance = isAdmin || User.IsInRole(RoleCodes.Accountant);
+    var showOperations = isAdmin || User.IsInRole(RoleCodes.Receptionist) || User.IsInRole(RoleCodes.Trainer);
+}
+
+<section class="page-heading">
+    <div><p class="eyebrow">BẢNG ĐIỀU KHIỂN · @Model.RoleName.ToUpperInvariant()</p><h1>Xin chào, @Model.DisplayName<span class="accent">.</span></h1><p class="muted">Dữ liệu vận hành trực tiếp từ SQL Server · @DateTime.Today.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))</p></div>
+    <div class="quick-actions">
+        @if (showMembers) { <a asp-controller="MemberSearch" asp-action="Index" class="button button-secondary">Tra cứu hội viên</a> }
+        @if (showFinance) { <a asp-controller="Reports" asp-action="Index" asp-route-type="revenue" class="button">Báo cáo doanh thu</a> }
+        @if (!showFinance && showOperations) { <a asp-controller="Reports" asp-action="Index" asp-route-type="classes" class="button">Lịch lớp</a> }
+    </div>
+</section>
+
+@if (Model.MustChangePassword) { <div class="alert alert-warning" role="alert">Tài khoản đang dùng mật khẩu tạm thời. Hãy đổi mật khẩu trước khi thao tác nghiệp vụ.</div> }
+@if (Model.DataNotice is not null) { <div class="alert alert-warning" role="status"><b>Một số báo cáo chưa sẵn sàng.</b> @Model.DataNotice</div> }
+
+<section class="metric-grid" aria-label="Chỉ số tổng quan">
+    @if (showMembers && Model.ActiveMembers is not null) { <article class="metric-card"><div class="metric-label">HỘI VIÊN CÒN HIỆU LỰC</div><strong>@Model.ActiveMembers.Value.ToString("N0")</strong><small>Gói còn thời hạn hôm nay</small></article> }
+    @if (showMembers) { <article class="metric-card"><div class="metric-label">SẮP HẾT HẠN</div><strong>@Model.Expiring.Count.ToString("N0")</strong><small>Trong 30 ngày tới</small></article> }
+    @if (showFinance && Model.MonthRevenue is not null) { <article class="metric-card metric-highlight"><div class="metric-label">DOANH THU THÁNG NÀY</div><strong>@Model.MonthRevenue.Value.ToString("N0") <small>₫</small></strong><small>Giao dịch hoàn tất</small></article> }
+    @if (showOperations) { <article class="metric-card"><div class="metric-label">BUỔI TẬP HÔM NAY</div><strong>@Model.Classes.Count.ToString("N0")</strong><small>@Model.Attendance.Count.ToString("N0") lượt check-in hôm nay</small></article> }
+</section>
+
+<div class="dashboard-columns">
+    @if (showFinance)
+    {
+        <section class="panel">
+            <div class="panel-heading"><div><h2>Doanh thu 7 ngày</h2><p>Theo ngày ghi nhận thanh toán thành công</p></div><a asp-controller="Reports" asp-action="Index" asp-route-type="revenue" class="text-link">Báo cáo đầy đủ →</a></div>
+            @if (Model.Revenue.Count == 0) { <div class="empty-state">Chưa có giao dịch trong khoảng thời gian này.</div> }
+            else
+            {
+                var max = Math.Max(Model.Revenue.Max(x => x.Revenue), 1m);
+                <div class="chart" role="img" aria-label="Biểu đồ doanh thu bảy ngày gần nhất">
+                    @foreach (var day in Model.Revenue)
+                    {
+                        var height = (double)(day.Revenue / max * 100m);
+                        <div class="chart-column" title="@day.Date.ToString("dd/MM"): @day.Revenue.ToString("N0") ₫"><span>@day.Revenue.ToString("N0")</span><div class="chart-track"><i style="height:@Math.Max(height, 2)%"></i></div><small>@day.Date.ToString("dd/MM")</small></div>
+                    }
+                </div>
+            }
+        </section>
+    }
+    @if (showMembers)
+    {
+        <section class="panel">
+            <div class="panel-heading"><div><h2>Hội viên sắp hết hạn</h2><p>Ưu tiên liên hệ gia hạn</p></div><a asp-controller="Reports" asp-action="Index" asp-route-type="members" class="text-link">Xem danh sách →</a></div>
+            @if (Model.Expiring.Count == 0) { <div class="empty-state">Không có hội viên sắp hết hạn.</div> }
+            else { <div class="compact-list">@foreach (var member in Model.Expiring) { <div class="compact-row"><span class="person-initial">@member.Name.FirstOrDefault()</span><div class="person-info"><b>@member.Name</b><small>@member.PlanName · @member.Phone</small></div><span class="days-left">@(member.DaysRemaining == 0 ? "Hôm nay" : $"{member.DaysRemaining} ngày")</span></div> }</div> }
+        </section>
+    }
+</div>
+
+@if (showOperations)
+{
+    <section class="panel table-panel">
+        <div class="panel-heading"><div><h2>Lịch lớp hôm nay</h2><p>Buổi sắp diễn ra và số chỗ còn trống</p></div><a asp-controller="Reports" asp-action="Index" asp-route-type="classes" asp-route-from="@DateTime.Today.ToString("yyyy-MM-dd")" asp-route-to="@DateTime.Today.ToString("yyyy-MM-dd")" class="text-link">Xem lịch →</a></div>
+        @if (Model.Classes.Count == 0) { <div class="empty-state">Hôm nay chưa có lớp theo lịch.</div> }
+        else { <div class="table-scroll"><table><thead><tr><th>LỚP</th><th>PHÒNG</th><th>HUẤN LUYỆN VIÊN</th><th>BẮT ĐẦU</th><th>ĐÃ ĐẶT / SỨC CHỨA</th><th>CÒN CHỖ</th></tr></thead><tbody>@foreach (var item in Model.Classes.OrderBy(c => c.StartAt)) { <tr><td><b>@item.ClassName</b></td><td>@item.RoomName</td><td>@item.TrainerName</td><td>@item.StartAt.ToString("HH:mm")</td><td>@item.Booked / @item.Capacity</td><td><span class="status-pill @(item.Available == 0 ? "status-full" : "status-open")">@item.Available</span></td></tr> }</tbody></table></div> }
+    </section>
+    <section class="panel table-panel">
+        <div class="panel-heading"><div><h2>Check-in hôm nay</h2><p>Lịch sử điểm danh mới nhất</p></div><a asp-controller="Reports" asp-action="Index" asp-route-type="attendance" asp-route-from="@DateTime.Today.ToString("yyyy-MM-dd")" asp-route-to="@DateTime.Today.ToString("yyyy-MM-dd")" class="text-link">Xem điểm danh →</a></div>
+        @if (Model.Attendance.Count == 0) { <div class="empty-state">Chưa có lượt check-in hôm nay.</div> }
+        else { <div class="table-scroll"><table><thead><tr><th>HỘI VIÊN</th><th>MÃ</th><th>THỜI GIAN</th><th>LỚP</th><th>NHÂN VIÊN</th></tr></thead><tbody>@foreach (var item in Model.Attendance.Take(6)) { <tr><td><b>@item.MemberName</b></td><td>@item.MemberCode</td><td>@item.CheckedAt.ToString("HH:mm")</td><td>@(item.ClassName ?? "Tập tự do")</td><td>@item.EmployeeName</td></tr> }</tbody></table></div> }
+    </section>
+}
+
+<section class="session-note"><span>◉</span> Phiên: <b>@Model.Username</b><span>·</span> quyền dữ liệu theo vai trò <b>@Model.RoleCode</b></section>

@@ -1,36 +1,57 @@
-# NhomXX_QuanLyPhongGym
+# Hệ thống quản lý phòng gym — DBMS330284
 
-Ứng dụng web quản lý phòng gym kết nối trực tiếp Microsoft SQL Server. Hệ thống quản lý trọn vòng đời hội viên: hồ sơ, gói tập, đăng ký, hóa đơn/thanh toán, lịch lớp, đặt lớp và check-in; đồng thời cung cấp báo cáo vận hành theo phân quyền.
+ASP.NET Core MVC .NET 8 kết nối Microsoft SQL Server, bao phủ hồ sơ hội viên, gói tập, đăng ký–hóa đơn–thanh toán, phòng/lớp/lịch, đặt chỗ, check-in, dashboard và báo cáo theo vai trò.
 
-> `NhomXX` là chỗ giữ chỗ. Leader thay `XX` bằng số nhóm đã được giảng viên xác nhận trước khi nộp hoặc tạo remote GitHub.
+## Chạy database
 
-## Mục tiêu chất lượng
+Yêu cầu SQL Server Express và `sqlcmd`:
 
-Thiết kế này được lập trực tiếp theo rubric DBMS330284, nhắm mức Tốt/Xuất sắc: 3NF, thành phần SQL có ý nghĩa nghiệp vụ, minh chứng index/concurrency, app gọi Stored Procedure/Function thực tế và demo kết nối SQL Server trực tiếp.
-
-Tài liệu bắt đầu tại [kiến trúc & luồng nghiệp vụ](docs/ARCHITECTURE.md), [ma trận tuân thủ rubric](docs/RUBRIC_COMPLIANCE.md), [phân công 4 thành viên](docs/TEAM_TASKS.md) và [quy tắc Git](docs/CONTRIBUTING.md).
-
-## Cấu trúc repo
-
-```text
-database/       SQL Server scripts theo thứ tự chạy (schema, seed, views, procs, security, tests)
-src/GymManagement.Web/  Ứng dụng ASP.NET Core MVC (.NET 8) — sẽ được TV4 tạo
-docs/           Thiết kế, kiểm thử, báo cáo và slide
-tests/          Kịch bản SQL/app test và bằng chứng hiệu năng/concurrency
+```powershell
+.\database\run-database.ps1 -Server '.\SQLEXPRESS' -DatabaseName 'GymManagementDB' -DropExisting
 ```
 
-## Quy trình nhanh
+Runner tạo database sạch, chạy toàn bộ schema/module/security/seed và bốn tầng smoke test. Không dùng `-DropExisting` trên database có dữ liệu cần giữ.
 
-1. Leader cập nhật tên nhóm và danh sách thành viên trong `docs/TEAM_TASKS.md`.
-2. Mỗi thành viên checkout đúng feature branch, đọc `TASK.md` trong branch trước khi code.
-3. Chạy toàn bộ scripts SQL trên SQL Server theo `database/README.md` (sẽ được TV1 hoàn thiện), cấu hình chuỗi kết nối qua Secret Manager hoặc biến môi trường — không commit mật khẩu.
-4. Tạo Pull Request vào `develop`, có checklist test và ít nhất một reviewer; chỉ leader merge `develop` vào `main` sau khi demo end-to-end thành công.
+Kết quả chuẩn đã kiểm chứng: 15 bảng, 43 CHECK, 19 FK, 6 trigger, 9 view, 20 non-PK index, 42 procedure, 9 function, 16 procedure transaction và 5 database role.
 
-## Phạm vi v1
+Tài khoản ứng dụng demo:
 
-Bao gồm membership/billing, lịch lớp/đặt chỗ/check-in, nhân sự–phòng tập, báo cáo và phân quyền. Không nhận phạm vi ngoài rubric như cổng thanh toán thật, SMS/email, nhận diện khuôn mặt hoặc đa chi nhánh nếu chưa hoàn tất checklist rubric.
+| Username | Password | Vai trò |
+|---|---|---|
+| `admin` | `Admin@123` | Quản trị |
+| `letan` | `LeTan@123` | Lễ tân |
+| `trainer` | `Trainer@123` | Huấn luyện viên |
+| `ketoan` | `KeToan@123` | Kế toán |
 
-## Tài liệu tham khảo nghiệp vụ
+## Chạy ứng dụng
 
-Các luồng membership, billing, booking, check-in, staff management và reporting được chọn theo các năng lực phổ biến của hệ thống gym thương mại, rồi thu gọn về phạm vi có thể demo và bảo vệ tốt trong học phần: [ABC Glofox – Gym Management Software](https://www.glofox.com/business-types/gym-management-software/).
+Connection string không được commit. Cấu hình bằng User Secrets:
 
+```powershell
+dotnet user-secrets --project src/GymManagement.Web set "ConnectionStrings:GymDb" "Server=.\SQLEXPRESS;Database=GymManagementDB;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=True"
+dotnet test GymManagement.sln --configuration Release
+dotnet run --project src/GymManagement.Web
+```
+
+Mở URL được in trong terminal. `/health` trả `Healthy` khi kết nối SQL Server hoạt động.
+
+## Chức năng và phân quyền
+
+- Admin: toàn bộ dashboard, hội viên, danh mục gói, billing, vận hành và báo cáo.
+- Lễ tân: hội viên, đăng ký gói, đặt lớp, check-in và báo cáo vận hành.
+- Huấn luyện viên: lịch lớp, danh sách đặt chỗ, điểm danh và báo cáo lớp.
+- Kế toán: hóa đơn/thanh toán và báo cáo doanh thu.
+
+Ứng dụng ghi dữ liệu qua stored procedure; `rl_GymApp` bị `DENY` DML/SELECT trực tiếp trên schema và chỉ được `GRANT EXECUTE` các entry point cần thiết.
+
+## Kiểm thử và hồ sơ
+
+- `database/10*.sql`: smoke test schema, membership/billing, class operations và toàn bộ gate rubric.
+- `tests/sql/`: kiểm tra lockout và quyền `GRANT/DENY`.
+- `tests/concurrency/`: kịch bản hai session chống overbooking.
+- `tests/index/tv3_benchmark.sql`: so sánh `STATISTICS IO/TIME` trước/sau index.
+- [TEST_EVIDENCE.md](docs/TEST_EVIDENCE.md): kết quả kiểm thử đã chạy.
+- [RUBRIC_COMPLIANCE.md](docs/RUBRIC_COMPLIANCE.md): ma trận đối chiếu rubric.
+- `deliverables/`: báo cáo Word, ảnh minh họa thực tế và slide bảo vệ; thay `NhomXX` và thông tin thành viên trước khi nộp.
+
+Quy trình cộng tác ngắn gọn tại [CONTRIBUTING.md](docs/CONTRIBUTING.md). Từ thời điểm hoàn thiện, mọi giao việc và bàn giao đều thực hiện bằng GitHub Issues/PR.

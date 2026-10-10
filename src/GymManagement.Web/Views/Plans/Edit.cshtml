@@ -1,0 +1,10 @@
+@model GymManagement.Web.Models.PlanEditViewModel
+@{ViewData["Title"]=Model.Id is null?"Thêm gói tập":"Cập nhật gói tập";}
+<div class="page-heading"><div><p class="eyebrow">Danh mục</p><h1>@ViewData["Title"]</h1></div></div>
+<form method="post" class="form-card"><input asp-for="Id" type="hidden"/><div asp-validation-summary="ModelOnly" class="validation-summary"></div><div class="form-grid">
+<div><label asp-for="Code"></label><input asp-for="Code"/><span asp-validation-for="Code" class="field-validation"></span></div>
+<div><label asp-for="Name"></label><input asp-for="Name"/><span asp-validation-for="Name" class="field-validation"></span></div>
+<div><label asp-for="DurationDays"></label><input asp-for="DurationDays" type="number"/></div><div><label asp-for="Price"></label><input asp-for="Price" type="number" step="1000"/></div>
+<div><label asp-for="MaxCheckInsPerDay"></label><input asp-for="MaxCheckInsPerDay" type="number"/></div><div><label class="checkbox-row"><input asp-for="AllowsClasses"/> Bao gồm lớp nhóm</label></div>
+<div class="span-2"><label asp-for="Description"></label><textarea asp-for="Description" rows="3"></textarea></div></div>
+<div class="form-actions"><button class="button" type="submit">Lưu</button><a class="button button-light" asp-action="Index">Hủy</a></div></form>

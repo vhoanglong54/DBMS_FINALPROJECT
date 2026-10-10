@@ -1,0 +1,41 @@
+@model GymManagement.Web.Models.MemberIndexViewModel
+@{ ViewData["Title"] = "Hội viên"; }
+
+<div class="page-heading">
+    <div><p class="eyebrow">Nghiệp vụ lễ tân</p><h1>Hội viên</h1></div>
+    <a class="button" asp-action="Create">Thêm hội viên</a>
+</div>
+
+@if (TempData["Success"] is string success) { <div class="alert alert-success">@success</div> }
+@if (TempData["Error"] is string error) { <div class="alert alert-danger">@error</div> }
+@if (Model.Notice is not null) { <div class="alert alert-danger">@Model.Notice</div> }
+
+<form method="get" class="filter-bar">
+    <input type="search" name="search" value="@Model.Search" placeholder="Mã, tên hoặc số điện thoại" />
+    <label class="checkbox-row"><input type="checkbox" name="includeInactive" value="true" checked="@Model.IncludeInactive" /> Hiện hội viên đã ngừng</label>
+    <button class="button" type="submit">Tìm kiếm</button>
+</form>
+
+<div class="table-card">
+    <table>
+        <thead><tr><th>Mã</th><th>Họ tên</th><th>Điện thoại</th><th>Email</th><th>Ngày sinh</th><th>Trạng thái</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var item in Model.Members)
+        {
+            <tr>
+                <td>@item.Code</td><td>@item.FullName</td><td>@item.Phone</td><td>@(item.Email ?? "—")</td>
+                <td>@item.DateOfBirth.ToString("dd/MM/yyyy")</td>
+                <td><span class="badge @(item.IsActive ? "badge-success" : "badge-muted")">@(item.IsActive ? "Hoạt động" : "Đã ngừng")</span></td>
+                <td class="actions">
+                    <a asp-action="Details" asp-route-id="@item.Id">Chi tiết</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Sửa</a>
+                    <form asp-action="SetActive" asp-route-id="@item.Id" asp-route-isActive="@(!item.IsActive)" method="post">
+                        <button class="link-button" type="submit">@(item.IsActive ? "Ngừng" : "Kích hoạt")</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @if (Model.Members.Count == 0) { <p class="empty-state">Không tìm thấy hội viên phù hợp.</p> }
+</div>

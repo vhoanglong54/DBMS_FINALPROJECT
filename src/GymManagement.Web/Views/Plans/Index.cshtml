@@ -1,0 +1,7 @@
+@model IReadOnlyList<GymManagement.Web.Models.PlanListItem>
+@{ViewData["Title"]="Gói tập";}
+<div class="page-heading"><div><p class="eyebrow">Danh mục</p><h1>Gói tập</h1></div><a class="button" asp-action="Create">Thêm gói</a></div>
+@if(TempData["Success"] is string s){<div class="alert alert-success">@s</div>}
+<div class="table-card"><table><thead><tr><th>Mã</th><th>Tên</th><th>Thời hạn</th><th>Giá</th><th>Quyền lớp</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+@foreach(var p in Model){<tr><td>@p.Code</td><td>@p.Name</td><td>@p.DurationDays ngày</td><td>@p.Price.ToString("N0") ₫</td><td>@(p.AllowsClasses?"Có":"Không")</td><td>@(p.IsActive?"Đang bán":"Đã ngừng")</td><td class="actions"><a asp-action="Edit" asp-route-id="@p.Id">Sửa</a><form asp-action="SetActive" asp-route-id="@p.Id" asp-route-active="@(!p.IsActive)" method="post"><button class="link-button" type="submit">@(p.IsActive?"Ngừng":"Mở lại")</button></form></td></tr>}
+</tbody></table></div>
