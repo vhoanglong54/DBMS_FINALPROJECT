@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using GymManagement.Web.Models;
+using GymManagement.Web.Presentation;
 
 namespace GymManagement.Tests;
 
@@ -56,6 +57,38 @@ public sealed class BusinessModelValidationTests
     {
         var model = new ClassTypeEditViewModel { Code = "YOGA", Name = "Yoga", Duration = 5, Difficulty = "BEGINNER" };
         Assert.Contains(Validate(model), x => x.MemberNames.Contains(nameof(model.Duration)));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("1")]
+    [InlineData("MEMBER-001")]
+    public void CheckInRejectsMissingOrInternalMemberIdentifier(string memberCode)
+    {
+        var model = new CheckInViewModel { MemberCode = memberCode };
+        Assert.Contains(Validate(model), result => result.MemberNames.Contains(nameof(model.MemberCode)));
+    }
+
+    [Theory]
+    [InlineData("HV0001")]
+    [InlineData("hv1234")]
+    public void CheckInAcceptsPublicMemberCode(string memberCode)
+    {
+        var model = new CheckInViewModel { MemberCode = memberCode };
+        Assert.Empty(Validate(model));
+    }
+
+    [Theory]
+    [InlineData("ACTIVE", "Đang hoạt động", "status-active")]
+    [InlineData("WAITLISTED", "Hàng chờ", "status-pending")]
+    [InlineData("CANCELLED", "Đã hủy", "status-inactive")]
+    public void CanonicalStatusesHaveFriendlyAndSafePresentation(
+        string status,
+        string expectedLabel,
+        string expectedCss)
+    {
+        Assert.Equal(expectedLabel, DisplayLabels.Status(status));
+        Assert.Equal(expectedCss, DisplayLabels.StatusCss(status));
     }
 
     private static List<ValidationResult> Validate(object model)

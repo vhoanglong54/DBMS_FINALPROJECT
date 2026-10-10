@@ -10,6 +10,7 @@ namespace GymManagement.Web.Controllers;
 [Authorize(Policy = Policies.Operations)]
 public sealed partial class OperationsController(
     IOperationsRepository repository,
+    IMemberRepository memberRepository,
     ILogger<OperationsController> logger) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -176,13 +177,21 @@ public sealed partial class OperationsController(
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Book(
         long sessionId,
-        int memberId,
+        string memberCode,
         CancellationToken cancellationToken)
     {
         try
         {
-            var result = await repository.BookAsync(memberId, sessionId, cancellationToken);
-            TempData["Success"] = $"Đã tạo lượt đặt #{result.id}: {result.status}.";
+            var member = await FindActiveMemberAsync(memberCode, cancellationToken);
+            if (member is null)
+            {
+                TempData["Error"] = "Không tìm thấy hội viên đang hoạt động với mã đã nhập.";
+                return RedirectToAction(nameof(Session), new { id = sessionId });
+            }
+
+            var result = await repository.BookAsync(member.Id, sessionId, cancellationToken);
+            var resultLabel = result.status == "WAITLISTED" ? "đã vào hàng chờ" : "đã xác nhận";
+            TempData["Success"] = $"Đặt chỗ cho {member.Code} thành công ({resultLabel}).";
         }
         catch (SqlException exception)
         {
@@ -212,12 +221,14 @@ public sealed partial class OperationsController(
 
     [HttpGet]
     public async Task<IActionResult> CheckIn(
-        int? memberId,
+        string? memberCode,
         CancellationToken cancellationToken) =>
         View(new CheckInViewModel
         {
-            MemberId = memberId ?? 0,
-            History = await repository.CheckInHistoryAsync(memberId, cancellationToken)
+            MemberCode = memberCode ?? string.Empty,
+            History = await repository.CheckInHistoryAsync(
+                (await FindActiveMemberAsync(memberCode, cancellationToken))?.Id,
+                cancellationToken)
         });
 
     [HttpPost]
@@ -226,24 +237,50 @@ public sealed partial class OperationsController(
         CheckInViewModel model,
         CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            model.History = await repository.CheckInHistoryAsync(null, cancellationToken);
+            return View(model);
+        }
+
         try
         {
+            var member = await FindActiveMemberAsync(model.MemberCode, cancellationToken);
+            if (member is null)
+            {
+                ModelState.AddModelError(nameof(model.MemberCode), "Không tìm thấy hội viên đang hoạt động với mã này.");
+                model.History = await repository.CheckInHistoryAsync(null, cancellationToken);
+                return View(model);
+            }
+
             var id = await repository.CheckInAsync(
-                model.MemberId,
+                member.Id,
                 GetEmployeeId(),
                 model.SessionId,
                 model.Method,
                 cancellationToken);
-            TempData["Success"] = $"Check-in #{id} thành công.";
-            return RedirectToAction(nameof(CheckIn), new { memberId = model.MemberId });
+            TempData["Success"] = $"Check-in {member.Code} thành công (giao dịch #{id}).";
+            return RedirectToAction(nameof(CheckIn), new { memberCode = member.Code });
         }
         catch (SqlException exception)
         {
             LogCheckInFailure(logger, exception);
             ModelState.AddModelError(string.Empty, exception.Message);
-            model.History = await repository.CheckInHistoryAsync(model.MemberId, cancellationToken);
+            model.History = await repository.CheckInHistoryAsync(null, cancellationToken);
             return View(model);
         }
+    }
+
+    private async Task<MemberListItem?> FindActiveMemberAsync(
+        string? memberCode,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(memberCode)) return null;
+
+        var normalizedCode = memberCode.Trim();
+        var matches = await memberRepository.ListAsync(normalizedCode, false, cancellationToken);
+        return matches.FirstOrDefault(member =>
+            string.Equals(member.Code, normalizedCode, StringComparison.OrdinalIgnoreCase));
     }
 
     private int GetEmployeeId() =>

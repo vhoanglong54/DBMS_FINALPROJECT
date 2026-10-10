@@ -1,6 +1,70 @@
 @model GymManagement.Web.Models.SessionDetailsViewModel
-@{ViewData["Title"]="Quản lý buổi lớp";var s=Model.Session;}
-<div class="page-heading"><div><p class="eyebrow">@s.StartAt.ToString("dd/MM/yyyy HH:mm")</p><h1>@s.ClassName</h1><p>@s.RoomName · @s.TrainerName · @s.Booked/@s.Capacity chỗ</p></div><a class="button button-light" asp-action="Index">Quay lại</a></div>
-@if(TempData["Success"] is string ok){<div class="alert alert-success">@ok</div>}@if(TempData["Error"] is string er){<div class="alert alert-danger">@er</div>}
-<div class="split-grid"><form asp-action="Book" method="post" class="form-card narrow"><input type="hidden" name="sessionId" value="@s.Id"/><h2>Đặt chỗ</h2><label>Mã số hội viên</label><input type="number" name="memberId" min="1" required/><button class="button">Đặt chỗ</button><a asp-controller="MemberSearch" asp-action="Index">Tra cứu hội viên</a></form><form asp-action="CancelSession" method="post" class="form-card narrow"><input type="hidden" name="id" value="@s.Id"/><h2>Hủy buổi lớp</h2><label>Lý do</label><input name="reason" required/><button class="button button-danger">Hủy buổi lớp</button></form></div>
-<div class="page-heading section-heading"><h2>Danh sách đặt chỗ</h2></div><div class="table-card"><table><thead><tr><th>Hội viên</th><th>Đặt lúc</th><th>Trạng thái</th><th></th></tr></thead><tbody>@foreach(var x in Model.Bookings){<tr><td>@x.MemberCode — @x.MemberName</td><td>@x.BookedAt.ToLocalTime().ToString("dd/MM HH:mm")</td><td>@x.Status</td><td>@if(x.Status is "CONFIRMED" or "WAITLISTED"){<form asp-action="CancelBooking" method="post"><input type="hidden" name="id" value="@x.Id"/><input type="hidden" name="sessionId" value="@s.Id"/><input type="hidden" name="reason" value="Hủy bởi nhân viên"/><button class="link-button danger">Hủy chỗ</button></form>}</td></tr>}</tbody></table></div>
+@{
+    ViewData["Title"] = "Quản lý buổi lớp";
+    var session = Model.Session;
+}
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">@session.StartAt.ToString("dd/MM/yyyy HH:mm")</p>
+        <h1>@session.ClassName</h1>
+        <p class="muted">@session.RoomName · @session.TrainerName · @session.Booked/@session.Capacity chỗ</p>
+    </div>
+    <a class="button button-light" asp-action="Index">Quay lại lịch lớp</a>
+</div>
+
+@if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+@if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+
+<div class="split-grid">
+    <form asp-action="Book" method="post" class="form-card narrow">
+        <input type="hidden" name="sessionId" value="@session.Id" />
+        <h2>Đặt chỗ cho hội viên</h2>
+        <label for="member-code">Mã hội viên</label>
+        <input id="member-code" name="memberCode" maxlength="20" pattern="[Hh][Vv][0-9]{4,}" placeholder="HV0001" autocomplete="off" required />
+        <p class="muted">Nếu lớp đã đủ chỗ, hệ thống tự đưa hội viên vào hàng chờ.</p>
+        <div class="form-actions">
+            <button class="button" type="submit">Đặt chỗ</button>
+            <a class="button button-light" asp-controller="MemberSearch" asp-action="Index">Tra cứu mã</a>
+        </div>
+    </form>
+
+    <form asp-action="CancelSession" method="post" class="form-card narrow" onsubmit="return confirm('Hủy buổi lớp sẽ ảnh hưởng các lượt đặt chỗ. Bạn chắc chắn muốn tiếp tục?');">
+        <input type="hidden" name="id" value="@session.Id" />
+        <h2>Hủy buổi lớp</h2>
+        <label for="cancel-reason">Lý do hủy</label>
+        <input id="cancel-reason" name="reason" maxlength="500" placeholder="Nhập lý do để nhân viên dễ đối soát" required />
+        <div class="form-actions">
+            <button class="button button-danger" type="submit">Hủy buổi lớp</button>
+        </div>
+    </form>
+</div>
+
+<div class="page-heading section-heading"><h2>Danh sách đặt chỗ</h2></div>
+<div class="table-card">
+    <table>
+        <thead><tr><th>Hội viên</th><th>Đặt lúc</th><th>Trạng thái</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var booking in Model.Bookings)
+        {
+            <tr>
+                <td><strong>@booking.MemberCode</strong><br />@booking.MemberName</td>
+                <td>@booking.BookedAt.ToLocalTime().ToString("dd/MM HH:mm")</td>
+                <td><span class="status-pill @DisplayLabels.StatusCss(booking.Status)">@DisplayLabels.Status(booking.Status)</span></td>
+                <td>
+                    @if (booking.Status is "CONFIRMED" or "WAITLISTED")
+                    {
+                        <form asp-action="CancelBooking" method="post" onsubmit="return confirm('Xác nhận hủy chỗ của hội viên này?');">
+                            <input type="hidden" name="id" value="@booking.Id" />
+                            <input type="hidden" name="sessionId" value="@session.Id" />
+                            <input type="hidden" name="reason" value="Hủy bởi nhân viên" />
+                            <button class="link-button danger" type="submit">Hủy chỗ</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @if (Model.Bookings.Count == 0) { <p class="empty-state">Buổi lớp chưa có lượt đặt chỗ.</p> }
+</div>
