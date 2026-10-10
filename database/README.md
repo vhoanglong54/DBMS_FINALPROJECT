@@ -30,6 +30,8 @@ Runner dừng ngay khi một script lỗi (`sqlcmd -b`) và chạy theo thứ t�
 | `07a_membership_functions.sql` / `07b_operations_functions.sql` | TV2 / TV3 | ≥5 scalar/TVF |
 | `08_security.sql` | TV1 | role/login, GRANT/REVOKE/DENY, authentication API |
 
+TV4 reporting nằm trong `04c_tv4_reporting_views.sql`, `06c_tv4_reporting_procedures.sql` và `08c_tv4_reporting_security_grants.sql`. Sau khi GYM-05/GYM-07 đã cài view/function/procedure của module, chạy `./run-tv4.ps1` từ thư mục gốc repo. Ứng dụng gọi stored procedure; `rl_GymApp` không được `SELECT` trực tiếp bảng/view.
+
 TV2/TV3 dùng đúng hậu tố module để tránh conflict khi phát triển song song; TV1 quyết định thứ tự chạy cuối. Không sửa table/column contract nếu chưa có migration và review của TV1.
 
 ## Tài khoản ứng dụng demo

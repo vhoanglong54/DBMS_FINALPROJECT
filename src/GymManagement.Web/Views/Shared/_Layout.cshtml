@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - Gym Management</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reporting.css" asp-append-version="true" />
 </head>
 <body>
     <header class="topbar">
@@ -15,16 +16,16 @@
                 <a asp-controller="Home" asp-action="Index">Tổng quan</a>
                 @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist))
                 {
-                    <span class="nav-placeholder">Hội viên</span>
-                    <span class="nav-placeholder">Check-in</span>
+                    <a asp-controller="MemberSearch" asp-action="Index">Tra cứu hội viên</a>
                 }
-                @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Trainer))
+                @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Trainer) || User.IsInRole(RoleCodes.Receptionist))
                 {
-                    <span class="nav-placeholder">Lịch lớp</span>
+                    <a asp-controller="Reports" asp-action="Index" asp-route-type="classes">Công suất lớp</a>
+                    <a asp-controller="Reports" asp-action="Index" asp-route-type="attendance">Điểm danh</a>
                 }
                 @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Accountant))
                 {
-                    <span class="nav-placeholder">Tài chính</span>
+                    <a asp-controller="Reports" asp-action="Index" asp-route-type="revenue">Doanh thu</a>
                 }
             </nav>
             <div class="user-menu">
