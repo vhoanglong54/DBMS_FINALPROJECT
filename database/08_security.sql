@@ -1,3 +1,14 @@
+:setvar DatabaseName "GymManagementDB"
+:setvar CreateDemoLogins "0"
+:setvar AdminLogin "gym_admin_login"
+:setvar ReceptionLogin "gym_reception_login"
+:setvar TrainerLogin "gym_trainer_login"
+:setvar AccountantLogin "gym_accountant_login"
+:setvar AdminPassword "CHANGE_ME_Admin"
+:setvar ReceptionPassword "CHANGE_ME_Reception"
+:setvar TrainerPassword "CHANGE_ME_Trainer"
+:setvar AccountantPassword "CHANGE_ME_Accountant"
+
 USE [$(DatabaseName)];
 GO
 

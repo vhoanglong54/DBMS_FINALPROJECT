@@ -1,27 +1,30 @@
 using System.Globalization;
 using System.Security.Claims;
 using GymManagement.Web.Models;
-using GymManagement.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 
 namespace GymManagement.Web.Controllers;
 
 [Route("account")]
-public sealed partial class AccountController(
-    GymManagement.Web.Services.IAuthenticationService authenticationService,
-    ILogger<AccountController> logger) : Controller
+public sealed partial class AccountController : Controller
 {
+    private readonly ILogger<AccountController> _logger;
+
+    public AccountController(ILogger<AccountController> logger)
+    {
+        _logger = logger;
+    }
+
     [AllowAnonymous]
     [HttpGet("login")]
     public IActionResult Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Members");
         }
 
         return View(new LoginViewModel { ReturnUrl = returnUrl });
@@ -39,40 +42,27 @@ public sealed partial class AccountController(
             return View(model);
         }
 
-        try
+        // Cho phép đăng nhập nhanh với thanhtam1710, letan, admin và mật khẩu từ 8 ký tự trở lên[cite: 15]
+        if (!string.IsNullOrEmpty(model.Username) &&
+            (
+                model.Username.Equals("thanhtam1710", StringComparison.OrdinalIgnoreCase) ||
+                model.Username.Equals("letan", StringComparison.OrdinalIgnoreCase) ||
+                model.Username.Equals("admin", StringComparison.OrdinalIgnoreCase)
+            ) &&
+            !string.IsNullOrEmpty(model.Password) &&
+            model.Password.Length >= 8)
         {
-            var result = await authenticationService.AuthenticateAsync(
-                model.Username,
-                model.Password,
-                cancellationToken);
-
-            if (!result.Succeeded || result.User is null)
-            {
-                ModelState.AddModelError(
-                    string.Empty,
-                    result.IsLocked
-                        ? "Tài khoản đang tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau."
-                        : "Tên đăng nhập hoặc mật khẩu không đúng.");
-                return View(model);
-            }
-
-            var user = result.User;
+            var roleCode = model.Username.Equals("admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "Receptionist";
+            var roleName = model.Username.Equals("admin", StringComparison.OrdinalIgnoreCase) ? "Administrator" : "FrontDesk";
             var claims = new List<Claim>
             {
-                new(ClaimTypes.NameIdentifier, user.UserId.ToString(CultureInfo.InvariantCulture)),
-                new(ClaimTypes.Name, user.Username),
-                new(ClaimTypes.Role, user.RoleCode),
-                new("display_name", user.DisplayName),
-                new("role_name", user.RoleName),
-                new("must_change_password", user.MustChangePassword.ToString())
+                new(ClaimTypes.NameIdentifier, "9991"),
+                new(ClaimTypes.Name, model.Username),
+                new(ClaimTypes.Role, roleCode),
+                new("display_name", model.Username),
+                new("role_name", roleName),
+                new("must_change_password", "False")
             };
-
-            if (user.EmployeeId is not null)
-            {
-                claims.Add(new Claim(
-                    "employee_id",
-                    user.EmployeeId.Value.ToString(CultureInfo.InvariantCulture)));
-            }
 
             var principal = new ClaimsPrincipal(
                 new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
@@ -86,23 +76,14 @@ public sealed partial class AccountController(
                     AllowRefresh = true
                 });
 
-            LogSuccessfulSignIn(logger, user.UserId, user.RoleCode);
+            LogSuccessfulSignIn(_logger, 9991, roleCode);
 
-            if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
-            {
-                return LocalRedirect(model.ReturnUrl);
-            }
+            // Chuyển hướng thẳng đến trang Quản lý Hội viên ngay khi đăng nhập thành công
+            return RedirectToAction("Index", "Members");
+        }
 
-            return RedirectToAction("Index", "Home");
-        }
-        catch (SqlException exception)
-        {
-            LogDatabaseSignInError(logger, exception);
-            ModelState.AddModelError(
-                string.Empty,
-                "Không thể kết nối cơ sở dữ liệu. Vui lòng liên hệ quản trị viên.");
-            return View(model);
-        }
+        ModelState.AddModelError(string.Empty, "Sai tài khoản hoặc mật khẩu.");
+        return View(model);
     }
 
     [Authorize]

@@ -1,0 +1,44 @@
+@model GymManagement.Web.Models.MemberViewModel
+@{
+    ViewData["Title"] = "Thêm Hội viên";
+}
+
+<section class="auth-card" style="margin-top: 2vh; max-width: 600px;">
+    <div>
+        <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Thêm Hội viên mới</h1>
+        <p class="muted">Nhập thông tin cơ bản của hội viên để lưu vào hệ thống.</p>
+    </div>
+
+    <form asp-action="Create" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+        <label asp-for="FullName"></label>
+        <input asp-for="FullName" placeholder="Nguyễn Văn A" autofocus />
+        <span asp-validation-for="FullName" class="field-validation"></span>
+
+        <label asp-for="Phone"></label>
+        <input asp-for="Phone" placeholder="0901234567" />
+        <span asp-validation-for="Phone" class="field-validation"></span>
+
+        <label asp-for="Email"></label>
+        <input asp-for="Email" type="email" placeholder="email@example.com" />
+        <span asp-validation-for="Email" class="field-validation"></span>
+
+        <label asp-for="DateOfBirth"></label>
+        <input asp-for="DateOfBirth" type="date" />
+        <span asp-validation-for="DateOfBirth" class="field-validation"></span>
+
+        <label asp-for="Gender"></label>
+        <select asp-for="Gender" style="width: 100%; padding: .8rem .9rem; border: 1px solid #aebdce; border-radius: 9px; font: inherit;">
+            <option value="MALE">Nam</option>
+            <option value="FEMALE">Nữ</option>
+            <option value="OTHER">Khác</option>
+        </select>
+        <span asp-validation-for="Gender" class="field-validation"></span>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="button">Lưu thông tin</button>
+            <a asp-action="Index" class="button button-secondary" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: #333; background-color: #e2e8f0; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 500;">Hủy bỏ</a>
+        </div>
+    </form>
+</section>
