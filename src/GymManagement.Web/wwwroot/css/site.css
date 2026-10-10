@@ -52,7 +52,7 @@ body::before {
     z-index: -2;
     inset: 0;
     background:
-        linear-gradient(180deg, rgba(4, 10, 7, .86), rgba(7, 16, 13, .97) 68%),
+        linear-gradient(180deg, rgba(4, 10, 7, .48) 0%, rgba(7, 16, 13, .70) 62%, rgba(7, 16, 13, .84) 100%),
         url("../images/gym-background.png") center top / cover no-repeat;
 }
 
@@ -69,8 +69,8 @@ body::after {
 
 body.app-guest::before {
     background:
-        linear-gradient(90deg, rgba(3, 8, 6, .42), rgba(3, 8, 6, .72) 54%, rgba(3, 8, 6, .91)),
-        linear-gradient(180deg, rgba(3, 8, 6, .16), rgba(3, 8, 6, .88)),
+        linear-gradient(90deg, rgba(3, 8, 6, .18), rgba(3, 8, 6, .42) 54%, rgba(3, 8, 6, .68)),
+        linear-gradient(180deg, rgba(3, 8, 6, .04), rgba(3, 8, 6, .58)),
         url("../images/gym-background.png") center / cover no-repeat;
 }
 
@@ -948,7 +948,7 @@ dd {
 @media (max-width: 900px) {
     body.app-guest::before {
         background:
-            linear-gradient(180deg, rgba(3, 8, 6, .55), rgba(3, 8, 6, .94)),
+            linear-gradient(180deg, rgba(3, 8, 6, .28), rgba(3, 8, 6, .76)),
             url("../images/gym-background.png") center / cover no-repeat;
     }
 
