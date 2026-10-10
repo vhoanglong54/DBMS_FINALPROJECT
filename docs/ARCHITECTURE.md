@@ -27,9 +27,9 @@ flowchart LR
 ```mermaid
 flowchart TD
   A[Tiếp nhận hội viên] --> B[Chọn gói tập]
-  B --> C[sp_DangKyGoi: tạo đăng ký + hóa đơn]
+  B --> C[sp_DangKyGoiTapMoi: đăng ký + hóa đơn + chi tiết]
   C --> D{Thanh toán?}
-  D -->|Có| E[sp_GhiNhanThanhToan\nupdate trạng thái hóa đơn]
+  D -->|Có| E[sp_ThanhToan_Them\ncập nhật công nợ và kích hoạt gói]
   D -->|Chưa| F[Hóa đơn chờ thanh toán]
   E --> G[Đăng ký hiệu lực]
   G --> H[Check-in / đặt lớp]
@@ -45,8 +45,8 @@ flowchart TD
 |---|---|
 | Hội viên & gói tập | CRUD hồ sơ, CRUD gói, đăng ký/gia hạn, xem ngày hết hạn và trạng thái |
 | Thu phí | tạo hóa đơn, ghi thanh toán, không cho số tiền vượt dư nợ, xem lịch sử |
-| Vận hành lớp | CRUD phòng/HLV/lớp/lịch, đặt/hủy chỗ, chặn trùng lịch và vượt sức chứa |
-| Check-in | kiểm tra gói đang hiệu lực, không ghi trùng cùng ngày, lưu lịch sử |
+| Vận hành lớp | CRUD phòng/loại lớp/lịch, chọn HLV, đặt/hủy chỗ, chặn trùng lịch và vượt sức chứa |
+| Check-in | kiểm tra gói đang hiệu lực, giới hạn lượt theo gói, lưu lịch sử |
 | Báo cáo | doanh thu theo khoảng thời gian, hội viên sắp hết hạn, công suất lớp, điểm danh |
 | Bảo mật | login; menu và dữ liệu đúng quyền; minh họa `GRANT`, `REVOKE`, `DENY` |
 
@@ -93,20 +93,20 @@ erDiagram
 
 ## 5. Gói đối tượng SQL có ý nghĩa nghiệp vụ
 
-| Hạng mục | Danh sách dự kiến (tối thiểu rubric: 5) |
+| Hạng mục | Đối tượng đã triển khai (tối thiểu rubric: 5) |
 |---|---|
-| Constraint | `UQ_NguoiDung_Username`, `UQ_HoiVien_Ma`, `CK_GoiTap_Gia`, `CK_DangKyGoi_Ngay`, `CK_ThanhToan_SoTien`, `DF_*` trạng thái/ngày tạo |
-| Trigger | chặn check-in gói hết hạn; chặn booking vượt sức chứa; chặn trùng lịch phòng/HLV; cập nhật tổng hóa đơn khi chi tiết đổi; cập nhật trạng thái hóa đơn khi thanh toán; audit thay đổi trạng thái đăng ký |
-| View | `vw_HoiVienConHieuLuc`, `vw_DoanhThuTheoNgay`, `vw_CongSuatLop`, `vw_LichSuDiemDanh`, `vw_HoaDonConNo`, `vw_HoiVienSapHetHan` |
-| Index | `IX_DangKyGoi_Member_Status_EndDate`, `IX_ThanhToan_Invoice_PaidAt`, `IX_LichLop_Room_StartAt`, `IX_DatLop_Session_Status`, `IX_CheckIn_Member_CheckedAt` + PK clustered; đo trước/sau bằng actual execution plan/STATISTICS IO |
-| Procedure | `sp_DangKyGoi`, `sp_GhiNhanThanhToan`, `sp_DatLop`, `sp_HuyDatLop`, `sp_CheckInHoiVien`, `sp_BaoCaoDoanhThu` |
-| Function | `fn_TrangThaiGoi`, `fn_SoNgayConLai`, `fn_TuoiHoiVien`, `fn_ChoTrongLop`, `fn_TongChiHoiVien` |
+| Constraint | 43 CHECK cùng UNIQUE/DEFAULT, tiêu biểu `CK_DangKyGoi_Dates`, `CK_HoaDon_Amounts`, `CK_LichLop_MaxDuration`, `CK_CheckIn_NotFuture` |
+| Trigger | `trg_HoiVien_PreventDeleteActive`, ba trigger kiểm tra lịch/HLV/sức chứa và hai trigger bảo vệ booking |
+| View | `vw_HoiVienCoBan`, `vw_HoiVienSapHetHan`, `vw_LichLop_ConCho`, `vw_CongSuatLop`, `vw_LichSuCheckIn`, `vw_TV4_DoanhThuTheoNgay` cùng các view hỗ trợ |
+| Index | `IX_DangKyGoi_MemberId_Status`, `IX_HoaDon_MembershipId_Status`, `IX_LichLop_RoomId_StartAt_EndAt`, `IX_DatLop_SessionId_Status`, `IX_CheckIn_MemberId_CheckedAt` và các index hỗ trợ |
+| Procedure | 42 procedure, gồm `sp_HoiVien_Luu`, `sp_DangKyGoiTapMoi`, `sp_ThanhToan_Them`, `sp_DatLop_DatCho`, `sp_CheckIn_GhiNhan`, `sp_TV4_BaoCaoDoanhThu` |
+| Function | 9 function, gồm `fn_GioVN`, `fn_ChoTrongLop`, `fn_GoiHieuLuc`, `fn_DieuKienDatLop`, `fn_LichLopTheoKhoang`, `fn_TongDoanhThuHoiVien` |
 
 ## 6. Transaction, đồng thời, phân quyền
 
-Năm nghiệp vụ dùng `SET XACT_ABORT ON`, `BEGIN TRANSACTION`, `COMMIT`/`ROLLBACK` và `TRY...CATCH`: (1) đăng ký gói+tạo hóa đơn+chi tiết, (2) ghi thanh toán+cập nhật công nợ, (3) đặt lớp có khóa chống overbooking, (4) hủy đặt lớp+cập nhật trạng thái, (5) check-in+ghi lịch sử/điểm danh booking. `sp_DatLop` khóa hàng `LichLop` bằng `UPDLOCK, HOLDLOCK`, kiểm lại số booking `Confirmed` trước khi insert. Hai cửa sổ SSMS chạy cùng tình huống cuối chỗ là bằng chứng concurrency bắt buộc.
+Ít nhất năm nghiệp vụ dùng `SET XACT_ABORT ON`, `BEGIN TRANSACTION`, `COMMIT`/`ROLLBACK` và `TRY...CATCH`: (1) đăng ký gói+tạo hóa đơn+chi tiết, (2) ghi thanh toán+cập nhật công nợ, (3) đặt lớp có khóa chống overbooking, (4) hủy đặt lớp+đôn hàng chờ, (5) check-in+cập nhật booking. `sp_DatLop_DatCho` khóa hàng `LichLop` bằng `UPDLOCK, HOLDLOCK`, kiểm lại số booking trước khi insert. Bằng chứng hai kết nối đồng thời nằm trong `docs/TEST_EVIDENCE.md`.
 
-Các role: `rl_GymAdmin` (toàn quyền), `rl_LeTan` (hội viên, đăng ký, booking, check-in qua procedure), `rl_HuanLuyenVien` (xem lịch/lớp được phân công, cập nhật điểm danh qua procedure), `rl_KeToan` (hóa đơn/thanh toán/báo cáo). Thêm `rl_HoiVien` nếu triển khai self-service. Không cấp quyền ghi trực tiếp rộng rãi vào các bảng nghiệp vụ; cấp `EXECUTE` procedure và `SELECT` view đúng vai trò.
+Các role: `rl_GymAdmin` (toàn quyền), `rl_LeTan` (hội viên, đăng ký, booking, check-in qua procedure), `rl_HuanLuyenVien` (xem lịch/lớp và điểm danh qua procedure), `rl_KeToan` (hóa đơn/thanh toán/báo cáo), `rl_GymApp` (chỉ execute entry point). Không cấp quyền ghi trực tiếp rộng rãi vào bảng nghiệp vụ.
 
 ## 7. Kiểm thử và bằng chứng bảo vệ
 

@@ -15,23 +15,13 @@ public sealed class AuthenticationService(
     {
         var normalizedUsername = username.Trim().ToLowerInvariant();
         var user = await repository.FindByUsernameAsync(normalizedUsername, cancellationToken);
-
-        if (user is null)
-        {
-            return LoginResult.Invalid();
-        }
+        if (user is null) return LoginResult.Invalid();
 
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         if (user.LockedUntilUtc is not null && user.LockedUntilUtc > nowUtc)
-        {
             return LoginResult.Locked();
-        }
 
-        if (!passwordHasher.Verify(
-                password,
-                user.PasswordSalt,
-                user.PasswordHash,
-                user.PasswordIterations))
+        if (!passwordHasher.Verify(password, user.PasswordSalt, user.PasswordHash, user.PasswordIterations))
         {
             await repository.RecordFailedLoginAsync(user.UserId, cancellationToken);
             return LoginResult.Invalid();

@@ -6,4 +6,11 @@ public sealed record DashboardViewModel(
     string RoleCode,
     string RoleName,
     int? EmployeeId,
-    bool MustChangePassword);
+    bool MustChangePassword,
+    int? ActiveMembers,
+    IReadOnlyList<ExpiringMembership> Expiring,
+    decimal? MonthRevenue,
+    IReadOnlyList<DailyRevenue> Revenue,
+    IReadOnlyList<ClassSessionReport> Classes,
+    IReadOnlyList<AttendanceReport> Attendance,
+    string? DataNotice);

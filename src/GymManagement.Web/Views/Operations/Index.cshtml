@@ -1,0 +1,11 @@
+@model GymManagement.Web.Models.OperationsIndexViewModel
+@{ViewData["Title"]="Vận hành lớp";}
+<div class="page-heading"><div><p class="eyebrow">Class operations</p><h1>Vận hành lớp học</h1></div><div class="actions"><a class="button button-light" asp-action="CheckIn">Check-in</a><a class="button" asp-action="CreateSession">Tạo buổi lớp</a></div></div>
+@if(TempData["Success"] is string s){<div class="alert alert-success">@s</div>}@if(TempData["Error"] is string e){<div class="alert alert-danger">@e</div>}
+<div class="page-heading section-heading"><h2>Lịch 30 ngày tới</h2></div><div class="table-card"><table><thead><tr><th>Lớp</th><th>Phòng</th><th>HLV</th><th>Thời gian</th><th>Chỗ</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+@foreach(var x in Model.Sessions){<tr><td>@x.ClassName</td><td>@x.RoomName</td><td>@x.TrainerName</td><td>@x.StartAt.ToString("dd/MM HH:mm") – @x.EndAt.ToString("HH:mm")</td><td>@x.Booked/@x.Capacity</td><td>@x.Status</td><td><a asp-action="Session" asp-route-id="@x.Id">Quản lý</a></td></tr>}
+</tbody></table></div>
+<div class="split-grid">
+<section><div class="page-heading section-heading"><h2>Phòng tập</h2><a asp-action="Room">Thêm phòng</a></div><div class="table-card"><table><tbody>@foreach(var x in Model.Rooms){<tr><td><strong>@x.Code</strong><br/>@x.Name</td><td>@x.Capacity chỗ</td><td class="actions"><a asp-action="Room" asp-route-id="@x.Id">Sửa</a><form asp-action="SetRoomActive" asp-route-id="@x.Id" asp-route-active="@(!x.IsActive)" method="post"><button class="link-button" type="submit">@(x.IsActive?"Ngừng":"Mở")</button></form></td></tr>}</tbody></table></div></section>
+<section><div class="page-heading section-heading"><h2>Loại lớp</h2><a asp-action="ClassType">Thêm loại</a></div><div class="table-card"><table><tbody>@foreach(var x in Model.Classes){<tr><td><strong>@x.Code</strong><br/>@x.Name</td><td>@x.Duration phút</td><td class="actions"><a asp-action="ClassType" asp-route-id="@x.Id">Sửa</a><form asp-action="SetClassActive" asp-route-id="@x.Id" asp-route-active="@(!x.IsActive)" method="post"><button class="link-button" type="submit">@(x.IsActive?"Ngừng":"Mở")</button></form></td></tr>}</tbody></table></div></section>
+</div>

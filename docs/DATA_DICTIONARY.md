@@ -51,7 +51,7 @@ Contract này được freeze bởi TV1. Mọi thay đổi cột/kiểu/khóa ph
 
 ### `HoiVien`
 
-`MemberId` (PK), `MemberCode` (unique), `FullName`, `DateOfBirth`, `Gender`, `Phone`, `Email` (unique filtered), `Address`, `EmergencyContact`, `MedicalNote`, `JoinedAt`, `IsActive`, timestamps và `RowVersion`. `MedicalNote` là dữ liệu nhạy cảm, không nằm trong view cơ bản.
+`MemberId` (PK), `MemberCode` (unique), `FullName`, `DateOfBirth`, `Gender`, `Phone`, `Email` (unique filtered), `Address`, `EmergencyContact`, `MedicalNote`, `ChieuCao` (50–250 cm), `CanNang` (20–300 kg), `ThoiGianTap`, `JoinedAt`, `IsActive`, timestamps và `RowVersion`. `MedicalNote` là dữ liệu nhạy cảm, không nằm trong view cơ bản.
 
 ### `GoiTap`
 

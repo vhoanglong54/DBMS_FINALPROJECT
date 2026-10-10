@@ -1,0 +1,22 @@
+@model GymManagement.Web.Models.MemberEditViewModel
+@{ ViewData["Title"] = Model.Id is null ? "Thêm hội viên" : "Cập nhật hội viên"; }
+
+<div class="page-heading"><div><p class="eyebrow">Hồ sơ hội viên</p><h1>@ViewData["Title"]</h1></div></div>
+<form method="post" class="form-card">
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+    <div class="form-grid">
+        <div><label asp-for="FullName"></label><input asp-for="FullName" /><span asp-validation-for="FullName" class="field-validation"></span></div>
+        <div><label asp-for="Phone"></label><input asp-for="Phone" /><span asp-validation-for="Phone" class="field-validation"></span></div>
+        <div><label asp-for="Email"></label><input asp-for="Email" /><span asp-validation-for="Email" class="field-validation"></span></div>
+        <div><label asp-for="DateOfBirth"></label><input asp-for="DateOfBirth" type="date" /><span asp-validation-for="DateOfBirth" class="field-validation"></span></div>
+        <div><label asp-for="Gender"></label><select asp-for="Gender"><option value="MALE">Nam</option><option value="FEMALE">Nữ</option><option value="OTHER">Khác</option></select></div>
+        <div><label asp-for="PreferredWorkoutTime"></label><input asp-for="PreferredWorkoutTime" /></div>
+        <div><label asp-for="HeightCm"></label><input asp-for="HeightCm" type="number" /></div>
+        <div><label asp-for="WeightKg"></label><input asp-for="WeightKg" type="number" /></div>
+        <div class="span-2"><label asp-for="Address"></label><input asp-for="Address" /></div>
+        <div class="span-2"><label asp-for="EmergencyContact"></label><input asp-for="EmergencyContact" /></div>
+        <div class="span-2"><label asp-for="MedicalNote"></label><textarea asp-for="MedicalNote" rows="3"></textarea></div>
+    </div>
+    <div class="form-actions"><button class="button" type="submit">Lưu</button><a class="button button-light" asp-action="Index">Hủy</a></div>
+</form>

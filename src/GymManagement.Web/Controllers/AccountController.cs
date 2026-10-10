@@ -19,40 +19,25 @@ public sealed partial class AccountController(
     [HttpGet("login")]
     public IActionResult Login(string? returnUrl = null)
     {
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            return RedirectToAction("Index", "Home");
-        }
-
+        if (User.Identity?.IsAuthenticated == true) return RedirectToAction("Index", "Home");
         return View(new LoginViewModel { ReturnUrl = returnUrl });
     }
 
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
     [HttpPost("login")]
-    public async Task<IActionResult> Login(
-        LoginViewModel model,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> Login(LoginViewModel model, CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
+        if (!ModelState.IsValid) return View(model);
 
         try
         {
-            var result = await authenticationService.AuthenticateAsync(
-                model.Username,
-                model.Password,
-                cancellationToken);
-
+            var result = await authenticationService.AuthenticateAsync(model.Username, model.Password, cancellationToken);
             if (!result.Succeeded || result.User is null)
             {
-                ModelState.AddModelError(
-                    string.Empty,
-                    result.IsLocked
-                        ? "Tài khoản đang tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau."
-                        : "Tên đăng nhập hoặc mật khẩu không đúng.");
+                ModelState.AddModelError(string.Empty, result.IsLocked
+                    ? "Tài khoản đang tạm khóa do đăng nhập sai nhiều lần. Vui lòng thử lại sau."
+                    : "Tên đăng nhập hoặc mật khẩu không đúng.");
                 return View(model);
             }
 
@@ -66,41 +51,22 @@ public sealed partial class AccountController(
                 new("role_name", user.RoleName),
                 new("must_change_password", user.MustChangePassword.ToString())
             };
-
             if (user.EmployeeId is not null)
-            {
-                claims.Add(new Claim(
-                    "employee_id",
-                    user.EmployeeId.Value.ToString(CultureInfo.InvariantCulture)));
-            }
+                claims.Add(new Claim("employee_id", user.EmployeeId.Value.ToString(CultureInfo.InvariantCulture)));
 
-            var principal = new ClaimsPrincipal(
-                new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
-
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                principal,
-                new AuthenticationProperties
-                {
-                    IsPersistent = model.RememberMe,
-                    AllowRefresh = true
-                });
-
+            var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal,
+                new AuthenticationProperties { IsPersistent = model.RememberMe, AllowRefresh = true });
             LogSuccessfulSignIn(logger, user.UserId, user.RoleCode);
 
             if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
-            {
                 return LocalRedirect(model.ReturnUrl);
-            }
-
             return RedirectToAction("Index", "Home");
         }
         catch (SqlException exception)
         {
             LogDatabaseSignInError(logger, exception);
-            ModelState.AddModelError(
-                string.Empty,
-                "Không thể kết nối cơ sở dữ liệu. Vui lòng liên hệ quản trị viên.");
+            ModelState.AddModelError(string.Empty, "Không thể kết nối cơ sở dữ liệu. Vui lòng liên hệ quản trị viên.");
             return View(model);
         }
     }
@@ -118,20 +84,9 @@ public sealed partial class AccountController(
     [HttpGet("access-denied")]
     public IActionResult AccessDenied() => View();
 
-    [LoggerMessage(
-        EventId = 1001,
-        Level = LogLevel.Information,
-        Message = "User {UserId} signed in with role {RoleCode}.")]
-    private static partial void LogSuccessfulSignIn(
-        ILogger logger,
-        int userId,
-        string roleCode);
+    [LoggerMessage(EventId = 1001, Level = LogLevel.Information, Message = "User {UserId} signed in with role {RoleCode}.")]
+    private static partial void LogSuccessfulSignIn(ILogger logger, int userId, string roleCode);
 
-    [LoggerMessage(
-        EventId = 1002,
-        Level = LogLevel.Error,
-        Message = "Database error during sign-in.")]
-    private static partial void LogDatabaseSignInError(
-        ILogger logger,
-        Exception exception);
+    [LoggerMessage(EventId = 1002, Level = LogLevel.Error, Message = "Database error during sign-in.")]
+    private static partial void LogDatabaseSignInError(ILogger logger, Exception exception);
 }
