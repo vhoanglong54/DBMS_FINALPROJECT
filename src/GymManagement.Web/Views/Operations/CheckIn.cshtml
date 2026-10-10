@@ -1,5 +1,69 @@
 @model GymManagement.Web.Models.CheckInViewModel
-@{ViewData["Title"]="Check-in";}
-<div class="page-heading"><div><p class="eyebrow">Vận hành</p><h1>Check-in hội viên</h1></div></div>@if(TempData["Success"] is string s){<div class="alert alert-success">@s</div>}
-<form method="post" class="form-card"><div asp-validation-summary="ModelOnly" class="validation-summary"></div><div class="form-grid"><div><label>Mã số hội viên</label><input asp-for="MemberId" type="number" min="1"/></div><div><label>Session ID (nếu check-in lớp)</label><input asp-for="SessionId" type="number"/></div><div><label>Phương thức</label><select asp-for="Method"><option value="FRONT_DESK">Lễ tân</option><option value="BARCODE">Mã vạch</option><option value="KIOSK">Kiosk</option></select></div></div><button class="button">Ghi nhận check-in</button></form>
-<div class="page-heading section-heading"><h2>Lịch sử gần nhất</h2></div><div class="table-card"><table><thead><tr><th>Thời gian</th><th>Hội viên</th><th>Lớp</th><th>Nhân viên</th><th>Cách thức</th></tr></thead><tbody>@foreach(var x in Model.History){<tr><td>@x.CheckedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td><td>@x.MemberCode — @x.MemberName</td><td>@(x.ClassName??"Tập tự do")</td><td>@x.EmployeeName</td><td>@x.Method</td></tr>}</tbody></table></div>
+@{ ViewData["Title"] = "Check-in"; }
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">Vận hành tại quầy</p>
+        <h1>Check-in hội viên</h1>
+        <p class="muted">Nhập mã hiển thị trên hồ sơ hội viên, ví dụ HV0001.</p>
+    </div>
+    <a class="button button-light" asp-controller="MemberSearch" asp-action="Index">Tra cứu hội viên</a>
+</div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="status">@success</div>
+}
+
+<form method="post" class="form-card">
+    <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+    <div class="form-grid">
+        <div>
+            <label asp-for="MemberCode"></label>
+            <input asp-for="MemberCode" maxlength="20" autocomplete="off" placeholder="HV0001" />
+            <span asp-validation-for="MemberCode" class="field-validation"></span>
+        </div>
+        <div>
+            <label asp-for="SessionId"></label>
+            <input asp-for="SessionId" type="number" min="1" placeholder="Để trống nếu tập tự do" />
+            <span asp-validation-for="SessionId" class="field-validation"></span>
+        </div>
+        <div>
+            <label asp-for="Method"></label>
+            <select asp-for="Method">
+                <option value="FRONT_DESK">Lễ tân</option>
+                <option value="BARCODE">Mã vạch</option>
+                <option value="KIOSK">Kiosk</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-actions">
+        <button class="button" type="submit">Ghi nhận check-in</button>
+        <a class="button button-light" asp-action="Index">Quay lại vận hành</a>
+    </div>
+</form>
+
+<div class="page-heading section-heading">
+    <h2>Lịch sử check-in gần nhất</h2>
+</div>
+<div class="table-card">
+    <table>
+        <thead><tr><th>Thời gian</th><th>Hội viên</th><th>Hình thức tập</th><th>Nhân viên</th><th>Phương thức</th></tr></thead>
+        <tbody>
+        @foreach (var item in Model.History)
+        {
+            <tr>
+                <td>@item.CheckedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                <td><strong>@item.MemberCode</strong><br />@item.MemberName</td>
+                <td>@(item.ClassName ?? "Tập tự do")</td>
+                <td>@item.EmployeeName</td>
+                <td><span class="badge">@DisplayLabels.CheckInMethod(item.Method)</span></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @if (Model.History.Count == 0)
+    {
+        <p class="empty-state">Chưa có lượt check-in phù hợp.</p>
+    }
+</div>

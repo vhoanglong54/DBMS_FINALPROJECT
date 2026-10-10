@@ -6,11 +6,26 @@ Phòng gym cần một nguồn dữ liệu thống nhất để nhân viên ti�
 
 V1 tập trung một cơ sở gym, thanh toán được nhân viên xác nhận (tiền mặt/chuyển khoản/thẻ mô phỏng), không tích hợp cổng thanh toán hay khóa cửa vật lý. Check-in được thực hiện bởi lễ tân từ mã hội viên. Chọn phạm vi này để mọi chức năng có thể demo trực tiếp với SQL Server.
 
+### Đối chiếu với hệ thống quản lý gym thương mại
+
+Phạm vi được rà soát theo nhóm tính năng công khai của [Glofox](https://www.glofox.com/features/), [GymMaster](https://www.gymmaster.com/business/gym-software/) và [Mindbody](https://www.mindbodyonline.com/business/fitness). Đây là đối chiếu sản phẩm để tránh bỏ sót luồng cốt lõi, không phải yêu cầu tích hợp với các nền tảng đó.
+
+| Năng lực chuẩn | V1 hiện tại | Quyết định phạm vi |
+|---|---|---|
+| Hồ sơ và vòng đời hội viên | CRUD hồ sơ, trạng thái hoạt động, sức khỏe cơ bản, lịch sử gói | Bao phủ đầy đủ cho một cơ sở |
+| Membership & billing | Danh mục gói, đăng ký/gia hạn, hóa đơn, thanh toán nhiều lần, công nợ, hủy gói | Bao phủ lõi; chưa tích hợp recurring card/autopay |
+| Lịch và đặt lớp | Phòng, loại lớp, HLV, lịch, sức chứa, booking, hàng chờ, hủy và tự đôn hàng chờ | Bao phủ đầy đủ luồng vận hành |
+| Access & attendance | Check-in bằng mã hội viên, kiểm tra gói/quota, lịch sử điểm danh | Bao phủ phần mềm; chưa nối khóa cửa/máy quét thật |
+| Báo cáo và phân quyền | Dashboard, doanh thu, sắp hết hạn, công suất, điểm danh; Admin/Lễ tân/HLV/Kế toán | Bao phủ đúng rubric và vận hành nội bộ |
+| CRM, marketing, ứng dụng hội viên, đa chi nhánh, POS/kho | Chưa triển khai | Roadmap sau V1 vì vượt phạm vi project một cơ sở |
+
+Như vậy, V1 không cố mô phỏng các tích hợp doanh nghiệp chưa thể kiểm chứng. Mọi tính năng được tuyên bố đều có schema, procedure, giao diện và kịch bản test tương ứng.
+
 ## 2. Kiến trúc kỹ thuật
 
 ```mermaid
 flowchart LR
-  U[Admin / Lễ tân / HLV / Kế toán / Hội viên] --> UI[ASP.NET Core MVC .NET 8 + responsive CSS]
+  U[Admin / Lễ tân / HLV / Kế toán] --> UI[ASP.NET Core MVC .NET 8 + responsive CSS]
   UI --> AUTH[Xác thực + phân quyền ứng dụng]
   AUTH --> DAL[Repository ADO.NET\nchỉ gọi View / Stored Procedure / Function]
   DAL --> SQL[(SQL Server\nGymManagementDB)]
@@ -113,5 +128,5 @@ Các role: `rl_GymAdmin` (toàn quyền), `rl_LeTan` (hội viên, đăng ký, b
 - Mỗi procedure có test thành công và test rollback/lỗi; lưu script tái tạo trong `tests/` và đính kèm ảnh/kết quả thật vào PR liên quan.
 - Kiểm thử quyền bằng từng login mẫu: một thao tác được phép và một thao tác bị `DENY`.
 - Index: chạy cùng truy vấn trước/sau index, lưu Actual Execution Plan và `SET STATISTICS IO, TIME ON`.
-- Demo: cấu hình connection string, đăng nhập, làm xuyên suốt đăng ký → thanh toán → đặt lớp → check-in → báo cáo; không dùng ảnh/dữ liệu giả thay cho kết nối trực tiếp.
+- Demo: cấu hình connection string, đăng nhập, làm xuyên suốt đăng ký → thanh toán → đặt lớp → check-in bằng mã hội viên → báo cáo; không dùng ảnh/dữ liệu giả thay cho kết nối trực tiếp.
 

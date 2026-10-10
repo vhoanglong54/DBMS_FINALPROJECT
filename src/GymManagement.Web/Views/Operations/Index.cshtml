@@ -1,11 +1,85 @@
 @model GymManagement.Web.Models.OperationsIndexViewModel
-@{ViewData["Title"]="Vận hành lớp";}
-<div class="page-heading"><div><p class="eyebrow">Class operations</p><h1>Vận hành lớp học</h1></div><div class="actions"><a class="button button-light" asp-action="CheckIn">Check-in</a><a class="button" asp-action="CreateSession">Tạo buổi lớp</a></div></div>
-@if(TempData["Success"] is string s){<div class="alert alert-success">@s</div>}@if(TempData["Error"] is string e){<div class="alert alert-danger">@e</div>}
-<div class="page-heading section-heading"><h2>Lịch 30 ngày tới</h2></div><div class="table-card"><table><thead><tr><th>Lớp</th><th>Phòng</th><th>HLV</th><th>Thời gian</th><th>Chỗ</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-@foreach(var x in Model.Sessions){<tr><td>@x.ClassName</td><td>@x.RoomName</td><td>@x.TrainerName</td><td>@x.StartAt.ToString("dd/MM HH:mm") – @x.EndAt.ToString("HH:mm")</td><td>@x.Booked/@x.Capacity</td><td>@x.Status</td><td><a asp-action="Session" asp-route-id="@x.Id">Quản lý</a></td></tr>}
-</tbody></table></div>
+@{ ViewData["Title"] = "Vận hành lớp"; }
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">Class operations</p>
+        <h1>Vận hành lớp học</h1>
+        <p class="muted">Quản lý lịch, sức chứa, đặt chỗ và danh mục phòng tập.</p>
+    </div>
+    <div class="actions">
+        <a class="button button-light" asp-action="CheckIn">Check-in</a>
+        <a class="button" asp-action="CreateSession">Tạo buổi lớp</a>
+    </div>
+</div>
+
+@if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+@if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+
+<div class="page-heading section-heading"><h2>Lịch 30 ngày tới</h2></div>
+<div class="table-card">
+    <table>
+        <thead><tr><th>Lớp</th><th>Phòng</th><th>Huấn luyện viên</th><th>Thời gian</th><th>Chỗ</th><th>Trạng thái</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var session in Model.Sessions)
+        {
+            <tr>
+                <td><strong>@session.ClassName</strong></td>
+                <td>@session.RoomName</td>
+                <td>@session.TrainerName</td>
+                <td>@session.StartAt.ToString("dd/MM HH:mm") – @session.EndAt.ToString("HH:mm")</td>
+                <td>@session.Booked/@session.Capacity</td>
+                <td><span class="status-pill @DisplayLabels.StatusCss(session.Status)">@DisplayLabels.Status(session.Status)</span></td>
+                <td><a asp-action="Session" asp-route-id="@session.Id">Quản lý</a></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    @if (Model.Sessions.Count == 0) { <p class="empty-state">Chưa có buổi lớp trong 30 ngày tới.</p> }
+</div>
+
 <div class="split-grid">
-<section><div class="page-heading section-heading"><h2>Phòng tập</h2><a asp-action="Room">Thêm phòng</a></div><div class="table-card"><table><tbody>@foreach(var x in Model.Rooms){<tr><td><strong>@x.Code</strong><br/>@x.Name</td><td>@x.Capacity chỗ</td><td class="actions"><a asp-action="Room" asp-route-id="@x.Id">Sửa</a><form asp-action="SetRoomActive" asp-route-id="@x.Id" asp-route-active="@(!x.IsActive)" method="post"><button class="link-button" type="submit">@(x.IsActive?"Ngừng":"Mở")</button></form></td></tr>}</tbody></table></div></section>
-<section><div class="page-heading section-heading"><h2>Loại lớp</h2><a asp-action="ClassType">Thêm loại</a></div><div class="table-card"><table><tbody>@foreach(var x in Model.Classes){<tr><td><strong>@x.Code</strong><br/>@x.Name</td><td>@x.Duration phút</td><td class="actions"><a asp-action="ClassType" asp-route-id="@x.Id">Sửa</a><form asp-action="SetClassActive" asp-route-id="@x.Id" asp-route-active="@(!x.IsActive)" method="post"><button class="link-button" type="submit">@(x.IsActive?"Ngừng":"Mở")</button></form></td></tr>}</tbody></table></div></section>
+    <section>
+        <div class="page-heading section-heading"><h2>Phòng tập</h2><a asp-action="Room">Thêm phòng</a></div>
+        <div class="table-card">
+            <table><tbody>
+            @foreach (var room in Model.Rooms)
+            {
+                <tr>
+                    <td><strong>@room.Code</strong><br />@room.Name</td>
+                    <td>@room.Capacity chỗ</td>
+                    <td><span class="badge @(room.IsActive ? "badge-success" : "badge-muted")">@(room.IsActive ? "Đang mở" : "Đã ngừng")</span></td>
+                    <td class="actions">
+                        <a asp-action="Room" asp-route-id="@room.Id">Sửa</a>
+                        <form asp-action="SetRoomActive" asp-route-id="@room.Id" asp-route-active="@(!room.IsActive)" method="post" onsubmit="return confirm('Xác nhận thay đổi trạng thái phòng?');">
+                            <button class="link-button" type="submit">@(room.IsActive ? "Ngừng" : "Mở lại")</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody></table>
+        </div>
+    </section>
+
+    <section>
+        <div class="page-heading section-heading"><h2>Loại lớp</h2><a asp-action="ClassType">Thêm loại</a></div>
+        <div class="table-card">
+            <table><tbody>
+            @foreach (var classType in Model.Classes)
+            {
+                <tr>
+                    <td><strong>@classType.Code</strong><br />@classType.Name</td>
+                    <td>@classType.Duration phút</td>
+                    <td><span class="badge @(classType.IsActive ? "badge-success" : "badge-muted")">@(classType.IsActive ? "Đang mở" : "Đã ngừng")</span></td>
+                    <td class="actions">
+                        <a asp-action="ClassType" asp-route-id="@classType.Id">Sửa</a>
+                        <form asp-action="SetClassActive" asp-route-id="@classType.Id" asp-route-active="@(!classType.IsActive)" method="post" onsubmit="return confirm('Xác nhận thay đổi trạng thái loại lớp?');">
+                            <button class="link-button" type="submit">@(classType.IsActive ? "Ngừng" : "Mở lại")</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody></table>
+        </div>
+    </section>
 </div>

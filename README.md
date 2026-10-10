@@ -68,7 +68,7 @@ Tài khoản demo:
 3. Thanh toán một phần, kiểm tra hóa đơn `PARTIAL`, sau đó thanh toán đủ để đăng ký chuyển `ACTIVE` và hóa đơn chuyển `PAID`.
 4. Tạo phòng, loại lớp và một buổi lớp trong tương lai tại **Vận hành lớp**.
 5. Đặt lớp cho hội viên; thử lớp hết chỗ để kiểm tra `WAITLISTED`.
-6. Check-in hội viên và mở dashboard/báo cáo để xác nhận dữ liệu vừa phát sinh.
+6. Check-in bằng mã công khai của hội viên (ví dụ `HV0001`) và mở dashboard/báo cáo để xác nhận dữ liệu vừa phát sinh.
 7. Đăng xuất rồi đăng nhập bằng các tài khoản còn lại để kiểm tra menu và quyền theo vai trò.
 
 Muốn đưa dữ liệu demo về trạng thái ban đầu, dừng ứng dụng và chạy lại runner với `GymManagementDemo -DropExisting`.
