@@ -30,12 +30,17 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(RoleCodes.Admin, RoleCodes.Trainer));
     options.AddPolicy(Policies.Finance, policy =>
         policy.RequireRole(RoleCodes.Admin, RoleCodes.Accountant));
+    options.AddPolicy("MembershipSearch", policy =>
+        policy.RequireRole(RoleCodes.Admin, RoleCodes.Receptionist));
+    options.AddPolicy("OperationsReports", policy =>
+        policy.RequireRole(RoleCodes.Admin, RoleCodes.Receptionist, RoleCodes.Trainer));
 });
 
 builder.Services.AddScoped<ISqlConnectionFactory, SqlConnectionFactory>();
 builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
+builder.Services.AddScoped<IGymReportingRepository, SqlGymReportingRepository>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("sql-server");
 

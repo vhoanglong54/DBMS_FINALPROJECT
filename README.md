@@ -14,7 +14,7 @@ Tài liệu bắt đầu tại [kiến trúc & luồng nghiệp vụ](docs/ARCHI
 
 ```text
 database/       SQL Server scripts nền, security, seed và smoke test
-src/GymManagement.Web/  ASP.NET Core MVC .NET 8, đăng nhập và role authorization
+src/GymManagement.Web/  ASP.NET Core MVC .NET 8, dashboard phân quyền, tìm kiếm và báo cáo SQL
 docs/           Thiết kế, rule Git, giao việc, handoff và rubric
 tests/          Unit test và SQL test
 ```
@@ -32,6 +32,8 @@ tests/          Unit test và SQL test
 
 5. Chạy `dotnet restore`, `dotnet test GymManagement.sln`, sau đó `dotnet run --project src/GymManagement.Web`.
 6. Push task branch, tạo Pull Request vào `develop` với `Closes #<issue-number>`, rồi cập nhật `docs/HANDOFF_LOG.md` sau khi task đã được merge. Chỉ leader merge `develop` vào `main` sau khi demo end-to-end thành công.
+
+Hướng dẫn dashboard, tra cứu và báo cáo TV4: [src/GymManagement.Web/README.md](src/GymManagement.Web/README.md).
 
 ## Phạm vi v1
 
