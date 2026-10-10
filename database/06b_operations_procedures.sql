@@ -1,6 +1,15 @@
 USE [$(DatabaseName)];
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+GO
+
 /* ============================================================
    PhongTap
    ============================================================ */
@@ -218,6 +227,9 @@ BEGIN
         )
             THROW 52123, N'Huấn luyện viên không hợp lệ hoặc không hoạt động.', 1;
 
+        IF @StartAt <= dbo.fn_GioVN(SYSUTCDATETIME())
+            THROW 52124, N'Không thể tạo buổi lớp trong quá khứ.', 1;
+
         IF @Capacity IS NULL
             SELECT @Capacity = Capacity FROM dbo.PhongTap WHERE RoomId = @RoomId;
 
@@ -279,8 +291,9 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT SessionId, ClassId, ClassName, RoomId, RoomName, TrainerId, TrainerName,
-           StartAt, EndAt, Capacity, ConfirmedCount, SeatsLeft, Status
-    FROM dbo.fn_LichLop_TheoTuan(@TuNgay, @DenNgay)
+           StartAt, EndAt, Capacity, SeatsTaken AS ConfirmedCount, SeatsLeft, Status
+    FROM dbo.fn_LichLopTheoKhoang(CONVERT(datetime2(0), @TuNgay),
+         DATEADD(DAY, 1, CONVERT(datetime2(0), @DenNgay)), NULL, NULL, NULL)
     ORDER BY StartAt;
 END;
 GO
@@ -340,7 +353,7 @@ BEGIN
         IF @Capacity IS NULL
             THROW 52141, N'Buổi lớp không tồn tại.', 1;
 
-        IF @SessionStatus IN ('CANCELLED', 'COMPLETED') OR @StartAt <= SYSUTCDATETIME()
+        IF @SessionStatus IN ('CANCELLED', 'COMPLETED') OR @StartAt <= dbo.fn_GioVN(SYSUTCDATETIME())
             THROW 52142, N'Buổi lớp không còn nhận đặt chỗ.', 1;
 
         IF EXISTS
@@ -350,7 +363,7 @@ BEGIN
         )
             THROW 52143, N'Hội viên đã đặt chỗ buổi lớp này rồi.', 1;
 
-        IF dbo.fn_HoiVien_CoGoiHieuLuc(@MemberId, CAST(GETDATE() AS date)) = 0
+        IF NOT EXISTS (SELECT 1 FROM dbo.fn_GoiHieuLuc(@MemberId, CONVERT(date, @StartAt)) WHERE ActiveCount > 0)
             THROW 52144, N'Hội viên không có gói tập còn hiệu lực.', 1;
 
         IF NOT EXISTS
@@ -361,7 +374,7 @@ BEGIN
             WHERE dk.MemberId = @MemberId
               AND dk.Status = 'ACTIVE'
               AND g.AllowsClasses = 1
-              AND CAST(GETDATE() AS date) BETWEEN dk.StartDate AND dk.EndDate
+              AND CONVERT(date, @StartAt) BETWEEN dk.StartDate AND dk.EndDate
         )
             THROW 52145, N'Gói tập hiện tại không bao gồm quyền đặt lớp.', 1;
 
@@ -408,6 +421,9 @@ BEGIN
 
         IF @PreviousStatus = 'CANCELLED'
             THROW 52152, N'Lượt đặt chỗ đã được hủy trước đó.', 1;
+
+        IF dbo.fn_CoTheHuyDatLop(@BookingId, SYSUTCDATETIME()) = 0
+            THROW 52153, N'Đã quá thời hạn hủy chỗ hoặc buổi lớp không còn ở trạng thái phù hợp.', 1;
 
         UPDATE dbo.DatLop
         SET Status = 'CANCELLED',
@@ -462,7 +478,9 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT TOP (20) MemberId, MemberCode, FullName, Phone,
-           dbo.fn_HoiVien_CoGoiHieuLuc(MemberId, CAST(GETDATE() AS date)) AS HasActivePlan
+           CONVERT(bit, CASE WHEN EXISTS
+           (SELECT 1 FROM dbo.fn_GoiHieuLuc(MemberId, CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME()))) WHERE ActiveCount > 0)
+           THEN 1 ELSE 0 END) AS HasActivePlan
     FROM dbo.HoiVien
     WHERE IsActive = 1
       AND (MemberCode LIKE @Keyword + N'%' OR FullName LIKE N'%' + @Keyword + N'%' OR Phone LIKE @Keyword + N'%')
@@ -487,7 +505,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        IF dbo.fn_HoiVien_CoGoiHieuLuc(@MemberId, CAST(GETDATE() AS date)) = 0
+        IF NOT EXISTS (SELECT 1 FROM dbo.fn_GoiHieuLuc(@MemberId, CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME()))) WHERE ActiveCount > 0)
             THROW 52161, N'Hội viên không có gói tập còn hiệu lực để check-in.', 1;
 
         DECLARE @MaxPerDay tinyint;
@@ -496,12 +514,11 @@ BEGIN
         INNER JOIN dbo.GoiTap AS g ON g.PlanId = dk.PlanId
         WHERE dk.MemberId = @MemberId
           AND dk.Status = 'ACTIVE'
-          AND CAST(GETDATE() AS date) BETWEEN dk.StartDate AND dk.EndDate;
+          AND CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME())) BETWEEN dk.StartDate AND dk.EndDate;
 
         -- CheckedAt lưu UTC, nên đổi nửa đêm giờ máy chủ sang UTC để đếm đúng "hôm nay".
-        DECLARE @DayStartUtc datetime2(0) =
-            DATEADD(SECOND, DATEDIFF(SECOND, GETDATE(), SYSUTCDATETIME()),
-                    CAST(CAST(GETDATE() AS date) AS datetime2(0)));
+        DECLARE @TodayVn date = CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME()));
+        DECLARE @DayStartUtc datetime2(0) = DATEADD(HOUR, -7, CONVERT(datetime2(0), @TodayVn));
 
         DECLARE @TodayCount int;
         SELECT @TodayCount = COUNT(*)

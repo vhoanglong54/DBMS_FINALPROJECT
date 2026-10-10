@@ -1,4 +1,4 @@
-USE GymManagementDB;
+USE [$(DatabaseName)];
 GO
 
 SET ANSI_NULLS ON;

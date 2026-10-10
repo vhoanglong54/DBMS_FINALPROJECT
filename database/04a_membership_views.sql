@@ -1,4 +1,4 @@
-USE GymManagementDB;
+USE [$(DatabaseName)];
 GO
 
 CREATE OR ALTER VIEW dbo.vw_HoiVienSapHetHan
@@ -9,10 +9,10 @@ AS
         hv.Phone AS SoDienThoai,
         gt.PlanName AS TenGoi,
         dk.EndDate AS NgayKetThuc,
-        DATEDIFF(DAY, GETDATE(), dk.EndDate) AS SoNgayConLai
+        DATEDIFF(DAY, CONVERT(date, DATEADD(HOUR, 7, SYSUTCDATETIME())), dk.EndDate) AS SoNgayConLai
     FROM dbo.DangKyGoi dk
     JOIN dbo.HoiVien hv ON dk.MemberId = hv.MemberId
     JOIN dbo.GoiTap gt ON dk.PlanId = gt.PlanId
     WHERE dk.Status = 'ACTIVE'
-      AND DATEDIFF(DAY, GETDATE(), dk.EndDate) BETWEEN 0 AND 30;
+      AND DATEDIFF(DAY, CONVERT(date, DATEADD(HOUR, 7, SYSUTCDATETIME())), dk.EndDate) BETWEEN 0 AND 30;
 GO

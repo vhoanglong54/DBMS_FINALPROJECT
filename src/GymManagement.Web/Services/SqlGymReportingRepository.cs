@@ -61,8 +61,12 @@ public sealed class SqlGymReportingRepository(ISqlConnectionFactory connectionFa
 
         return new MemberSearchViewModel
         {
-            Query = query, Status = status, Page = page, PageSize = pageSize,
-            TotalCount = totalCount, Members = members
+            Query = query,
+            Status = status,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            Members = members
         };
     }
 

@@ -2,7 +2,7 @@
     SESSION B - cửa sổ SSMS thứ hai. Chạy TRONG LÚC Session A đang WAITFOR DELAY.
 */
 
-USE [GymManagementDB]; -- đổi tên database cho đúng máy demo
+USE [$(DatabaseName)];
 GO
 
 DECLARE @DemoSessionId bigint = 0; -- <-- sửa số 0 thành SessionId giống Session A

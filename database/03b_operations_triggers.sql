@@ -94,17 +94,17 @@ GO
 */
 CREATE OR ALTER TRIGGER dbo.trg_DatLop_EnforceSessionCapacity
 ON dbo.DatLop
-AFTER INSERT
+AFTER INSERT, UPDATE
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM inserted WHERE Status = 'CONFIRMED')
+    IF NOT EXISTS (SELECT 1 FROM inserted WHERE Status IN ('CONFIRMED', 'ATTENDED', 'NO_SHOW'))
         RETURN;
 
     DECLARE @AffectedSessions TABLE (SessionId bigint PRIMARY KEY);
     INSERT @AffectedSessions(SessionId)
-    SELECT DISTINCT SessionId FROM inserted WHERE Status = 'CONFIRMED';
+    SELECT DISTINCT SessionId FROM inserted WHERE Status IN ('CONFIRMED', 'ATTENDED', 'NO_SHOW');
 
     DECLARE @LockedCapacity TABLE (SessionId bigint PRIMARY KEY, Capacity smallint NOT NULL);
     INSERT @LockedCapacity(SessionId, Capacity)
@@ -116,7 +116,7 @@ BEGIN
     INSERT @Overbooked(SessionId, Capacity, ConfirmedCount)
     SELECT lc.SessionId, lc.Capacity, COUNT(*)
     FROM @LockedCapacity AS lc
-    INNER JOIN dbo.DatLop AS d ON d.SessionId = lc.SessionId AND d.Status = 'CONFIRMED'
+    INNER JOIN dbo.DatLop AS d ON d.SessionId = lc.SessionId AND d.Status IN ('CONFIRMED', 'ATTENDED', 'NO_SHOW')
     GROUP BY lc.SessionId, lc.Capacity
     HAVING COUNT(*) > lc.Capacity;
 
@@ -150,7 +150,7 @@ BEGIN
         FROM inserted AS i
         INNER JOIN dbo.LichLop AS l ON l.SessionId = i.SessionId
         WHERE i.Status IN ('CONFIRMED', 'WAITLISTED')
-          AND (l.Status IN ('CANCELLED', 'COMPLETED') OR l.StartAt <= SYSUTCDATETIME())
+          AND (l.Status IN ('CANCELLED', 'COMPLETED') OR l.StartAt <= dbo.fn_GioVN(SYSUTCDATETIME()))
     )
     BEGIN
         ROLLBACK TRANSACTION;

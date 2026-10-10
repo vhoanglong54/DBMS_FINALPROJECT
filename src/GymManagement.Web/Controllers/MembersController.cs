@@ -4,186 +4,104 @@ using GymManagement.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using System.Data;
 
 namespace GymManagement.Web.Controllers;
 
-[Authorize]
-public class MembersController(ISqlConnectionFactory connectionFactory) : Controller
+[Authorize(Policy = Policies.FrontDesk)]
+public sealed partial class MembersController(IMemberRepository repository, ILogger<MembersController> logger) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? search, bool includeInactive = false, CancellationToken cancellationToken = default)
     {
-        var members = new List<dynamic>();
-
         try
         {
-            await using var connection = connectionFactory.CreateConnection();
-            await using var command = new SqlCommand("SELECT * FROM dbo.HoiVien", connection);
-            
-            await connection.OpenAsync(cancellationToken);
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                members.Add(new
-                {
-                    Id = reader["MemberId"] != DBNull.Value ? reader.GetValue(reader.GetOrdinal("MemberId")) : 0,
-                    FullName = reader["FullName"]?.ToString() ?? "",
-                    Phone = reader["Phone"]?.ToString() ?? "",
-                    Email = reader["Email"] == DBNull.Value ? "" : reader["Email"]?.ToString() ?? "",
-                    DateOfBirth = reader.IsDBNull(reader.GetOrdinal("DateOfBirth")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("DateOfBirth")),
-                    Gender = reader["Gender"]?.ToString() ?? ""
-                });
-            }
+            var members = await repository.ListAsync(search, includeInactive, cancellationToken);
+            return View(new MemberIndexViewModel { Search = search, IncludeInactive = includeInactive, Members = members });
         }
-        catch (Exception ex)
+        catch (SqlException exception)
         {
-            Console.WriteLine("Lỗi đọc CSDL: " + ex.Message);
+            LogLoadFailure(logger, exception);
+            return View(new MemberIndexViewModel
+            {
+                Search = search,
+                IncludeInactive = includeInactive,
+                Notice = "Không thể tải dữ liệu hội viên. Hãy kiểm tra kết nối SQL Server."
+            });
         }
-
-        return View(members);
     }
 
     [HttpGet]
     public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
     {
-        dynamic? member = null;
-        try
-        {
-            await using var connection = connectionFactory.CreateConnection();
-            
-            await using var command = new SqlCommand("SELECT * FROM dbo.HoiVien WHERE MemberId = @Id", (SqlConnection)connection);
-            command.Parameters.AddWithValue("@Id", id);
-
-            await connection.OpenAsync(cancellationToken);
-            await using var reader = await command.ExecuteReaderAsync(CommandBehavior.SingleRow, cancellationToken);
-
-            if (await reader.ReadAsync(cancellationToken))
-            {
-                member = new
-                {
-                    Id = reader.GetValue(reader.GetOrdinal("MemberId")),
-                    FullName = reader["FullName"]?.ToString() ?? "",
-                    Phone = reader["Phone"]?.ToString() ?? "",
-                    Email = reader["Email"] == DBNull.Value ? "" : reader["Email"]?.ToString() ?? "",
-                    DateOfBirth = reader.IsDBNull(reader.GetOrdinal("DateOfBirth")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("DateOfBirth")),
-                    Gender = reader["Gender"]?.ToString() ?? ""
-                };
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Lỗi chi tiết: " + ex.Message);
-        }
-
-        if (member == null)
-        {
-            return NotFound();
-        }
-
-        return View(member);
+        var member = await repository.GetAsync(id, cancellationToken);
+        return member is null ? NotFound() : View(member);
     }
 
     [HttpGet]
-    public IActionResult Create()
+    public IActionResult Create() => View("Edit", new MemberEditViewModel());
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
     {
-        return View(new MemberViewModel { DateOfBirth = new DateTime(2000, 1, 1) });
+        var details = await repository.GetAsync(id, cancellationToken);
+        return details is null ? NotFound() : View(details.Member);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(MemberViewModel model)
+    public Task<IActionResult> Create(MemberEditViewModel model, CancellationToken cancellationToken) => Save(model, cancellationToken);
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, MemberEditViewModel model, CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid) return View(model);
-
-        try
-        {
-            await using var connection = connectionFactory.CreateConnection();
-            await using var command = new SqlCommand("dbo.sp_ThemHoiVien", (SqlConnection)connection)
-            {
-                CommandType = CommandType.StoredProcedure
-            };
-            
-            command.Parameters.AddWithValue("@FullName", model.FullName);
-            command.Parameters.AddWithValue("@Phone", model.Phone);
-            command.Parameters.AddWithValue("@Email", string.IsNullOrWhiteSpace(model.Email) ? DBNull.Value : model.Email);
-            command.Parameters.AddWithValue("@DateOfBirth", model.DateOfBirth);
-            command.Parameters.AddWithValue("@Gender", model.Gender);
-
-            await connection.OpenAsync();
-            await command.ExecuteNonQueryAsync();
-
-            return RedirectToAction(nameof(Index));
-        }
-        catch (SqlException ex)
-        {
-            if (ex.Number == 2601)
-                ModelState.AddModelError("Email", "Email này đã được sử dụng.");
-            else
-                ModelState.AddModelError("", "Lỗi CSDL: " + ex.Message);
-            
-            return View(model);
-        }
+        if (model.Id != id) return BadRequest();
+        return await Save(model, cancellationToken);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> SetActive(int id, bool isActive, CancellationToken cancellationToken)
     {
         try
         {
-            await using var connection = (SqlConnection)connectionFactory.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
-
-            // Mở Transaction thực hiện xóa dọn dẹp theo đúng thứ tự phân cấp từ lá (con sâu nhất) về gốc (cha)
-            await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                // Bước 1: Xóa bảng ThanhToan trước (vì tham chiếu tới HoaDon)
-                using (var cmd1 = new SqlCommand("DELETE FROM dbo.ThanhToan WHERE InvoiceId IN (SELECT InvoiceId FROM dbo.HoaDon WHERE MemberId = @Id OR MembershipId IN (SELECT MembershipId FROM dbo.DangKyGoi WHERE MemberId = @Id))", connection, transaction))
-                {
-                    cmd1.Parameters.AddWithValue("@Id", id);
-                    try { await cmd1.ExecuteNonQueryAsync(cancellationToken); } catch { }
-                }
-
-                // Bước 2: Xóa bảng HoaDon (vì tham chiếu tới DangKyGoi qua MembershipId)
-                using (var cmd2 = new SqlCommand("DELETE FROM dbo.HoaDon WHERE MemberId = @Id OR MembershipId IN (SELECT MembershipId FROM dbo.DangKyGoi WHERE MemberId = @Id)", connection, transaction))
-                {
-                    cmd2.Parameters.AddWithValue("@Id", id);
-                    try { await cmd2.ExecuteNonQueryAsync(cancellationToken); } catch { }
-                }
-
-                // Bước 3: Sau khi đã sạch HoaDon và ThanhToan, tiến hành xóa bảng DangKyGoi (Gói tập)
-                using (var cmd3 = new SqlCommand("DELETE FROM dbo.DangKyGoi WHERE MemberId = @Id", connection, transaction))
-                {
-                    cmd3.Parameters.AddWithValue("@Id", id);
-                    try { await cmd3.ExecuteNonQueryAsync(cancellationToken); } catch { }
-                }
-
-                // Bước 4: Cuối cùng mới thực hiện xóa hội viên chính trong bảng HoiVien
-                using (var cmd4 = new SqlCommand("DELETE FROM dbo.HoiVien WHERE MemberId = @Id", connection, transaction))
-                {
-                    cmd4.Parameters.AddWithValue("@Id", id);
-                    await cmd4.ExecuteNonQueryAsync(cancellationToken);
-                }
-
-                // Xác nhận hoàn tất Transaction
-                await transaction.CommitAsync(cancellationToken);
-            }
-            catch
-            {
-                // Hoàn tác nếu có lỗi phát sinh
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
-            }
+            await repository.SetActiveAsync(id, isActive, cancellationToken);
+            TempData["Success"] = isActive ? "Đã kích hoạt lại hội viên." : "Đã ngừng hoạt động hội viên.";
         }
-        catch (Exception ex)
+        catch (SqlException exception)
         {
-            TempData["ErrorMessage"] = "Không thể xóa hội viên này! Chi tiết lỗi: " + ex.Message;
+            LogStateFailure(logger, exception, id);
+            TempData["Error"] = exception.Message;
         }
-
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { includeInactive = true });
     }
+
+    private async Task<IActionResult> Save(MemberEditViewModel model, CancellationToken cancellationToken)
+    {
+        if (model.DateOfBirth.Date > DateTime.Today) ModelState.AddModelError(nameof(model.DateOfBirth), "Ngày sinh không hợp lệ.");
+        if (!ModelState.IsValid) return View("Edit", model);
+        try
+        {
+            var id = await repository.SaveAsync(model, cancellationToken);
+            TempData["Success"] = model.Id is null ? "Đã thêm hội viên." : "Đã cập nhật hội viên.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        catch (SqlException exception) when (exception.Number is 2601 or 2627)
+        {
+            ModelState.AddModelError(string.Empty, "Mã hội viên hoặc email đã tồn tại.");
+        }
+        catch (SqlException exception)
+        {
+            LogSaveFailure(logger, exception);
+            ModelState.AddModelError(string.Empty, exception.Message);
+        }
+        return View("Edit", model);
+    }
+
+    [LoggerMessage(EventId = 3001, Level = LogLevel.Error, Message = "Cannot load members")]
+    private static partial void LogLoadFailure(ILogger logger, Exception exception);
+    [LoggerMessage(EventId = 3002, Level = LogLevel.Warning, Message = "Cannot change member {MemberId} active state")]
+    private static partial void LogStateFailure(ILogger logger, Exception exception, int memberId);
+    [LoggerMessage(EventId = 3003, Level = LogLevel.Warning, Message = "Cannot save member")]
+    private static partial void LogSaveFailure(ILogger logger, Exception exception);
 }

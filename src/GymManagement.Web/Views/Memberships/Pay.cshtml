@@ -1,0 +1,7 @@
+@model GymManagement.Web.Models.PaymentCreateViewModel
+@{ViewData["Title"]="Thanh toán hóa đơn";}
+<div class="page-heading"><div><p class="eyebrow">@Model.InvoiceCode</p><h1>Thanh toán cho @Model.MemberName</h1><p class="muted">Công nợ: @Model.Remaining.ToString("N0") ₫</p></div></div>
+<form method="post" class="form-card narrow"><input asp-for="InvoiceId" type="hidden"/><input asp-for="InvoiceCode" type="hidden"/><input asp-for="MemberName" type="hidden"/><input asp-for="Remaining" type="hidden"/><div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+<label asp-for="Amount"></label><input asp-for="Amount" type="number" step="1000"/><span asp-validation-for="Amount" class="field-validation"></span>
+<label asp-for="PaymentMethod"></label><select asp-for="PaymentMethod"><option value="CASH">Tiền mặt</option><option value="BANK_TRANSFER">Chuyển khoản</option><option value="CARD">Thẻ</option><option value="E_WALLET">Ví điện tử</option></select>
+<label asp-for="TransactionReference"></label><input asp-for="TransactionReference"/><div class="form-actions"><button class="button" type="submit">Ghi nhận</button><a class="button button-light" asp-action="Index">Hủy</a></div></form>

@@ -16,12 +16,21 @@
                 <a asp-controller="Home" asp-action="Index">Tổng quan</a>
                 @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist))
                 {
+                    <a asp-controller="Members" asp-action="Index">Hội viên</a>
                     <a asp-controller="MemberSearch" asp-action="Index">Tra cứu hội viên</a>
+                }
+                @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist) || User.IsInRole(RoleCodes.Accountant))
+                {
+                    <a asp-controller="Memberships" asp-action="Index">Gói & thanh toán</a>
+                }
+                @if (User.IsInRole(RoleCodes.Admin))
+                {
+                    <a asp-controller="Plans" asp-action="Index">Danh mục gói</a>
                 }
                 @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Trainer) || User.IsInRole(RoleCodes.Receptionist))
                 {
+                    <a asp-controller="Operations" asp-action="Index">Vận hành lớp</a>
                     <a asp-controller="Reports" asp-action="Index" asp-route-type="classes">Công suất lớp</a>
-                    <a asp-controller="Reports" asp-action="Index" asp-route-type="attendance">Điểm danh</a>
                 }
                 @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Accountant))
                 {

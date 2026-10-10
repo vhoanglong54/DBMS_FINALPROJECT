@@ -2,7 +2,7 @@
     SESSION A - cửa sổ SSMS thứ nhất. Chạy từng khối (bôi đen + Ctrl+E), không chạy cả file.
 */
 
-USE [GymManagementDB]; -- đổi tên database cho đúng máy demo
+USE [$(DatabaseName)];
 GO
 
 -- Khối 1: dựng buổi lớp demo chỉ có 1 chỗ
@@ -20,7 +20,7 @@ EXEC dbo.sp_LopTap_Upsert
 
 EXEC dbo.sp_LichLop_TaoLich
     @ClassId = @ClassId, @RoomId = @RoomId, @TrainerId = @TrainerId,
-    @StartAt = '2027-02-01T18:00:00', @EndAt = '2027-02-01T19:00:00', @Capacity = 1,
+    @StartAt = '2030-02-01T18:00:00', @EndAt = '2030-02-01T19:00:00', @Capacity = 1,
     @NewSessionId = @SessionId OUTPUT;
 
 PRINT CONCAT(N'SessionId để demo = ', @SessionId);

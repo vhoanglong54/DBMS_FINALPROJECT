@@ -1,4 +1,4 @@
-USE GymManagementDB;
+USE [$(DatabaseName)];
 GO
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_DangKyGoi_MemberId_Status')

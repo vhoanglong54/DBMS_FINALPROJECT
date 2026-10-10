@@ -1,13 +1,13 @@
-# Dashboard và báo cáo (GYM-09)
+# Ứng dụng ASP.NET Core MVC
 
 Ứng dụng ASP.NET Core MVC .NET 8 hiển thị dữ liệu SQL Server thật. Dashboard và màn hình tìm kiếm/báo cáo không tạo dữ liệu mẫu trong UI; mọi số liệu đến từ reporting stored procedure.
 
 ## Chạy local
 
-Yêu cầu .NET 8 SDK, SQL Server và `sqlcmd`. Dựng database nền bằng `./database/run-tv1.ps1`; sau khi chạy các SQL module GYM-05/GYM-07, cài reporting TV4 từ thư mục gốc:
+Yêu cầu .NET 8 SDK, SQL Server và `sqlcmd`. Dựng toàn bộ database bằng runner tích hợp từ thư mục gốc:
 
 ```powershell
-./run-tv4.ps1 -Server '.\SQLEXPRESS' -DatabaseName 'GymManagementDB'
+.\database\run-database.ps1 -Server '.\SQLEXPRESS' -DatabaseName 'GymManagementDB' -DropExisting
 ```
 
 Đặt chuỗi kết nối ngoài source rồi chạy ứng dụng:

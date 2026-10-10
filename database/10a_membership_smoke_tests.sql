@@ -1,49 +1,79 @@
-USE [GymManagementDB];
+USE [$(DatabaseName)];
 GO
 
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
 GO
 
-PRINT '--- BAT DAU TEST MODULE MEMBERSHIP & BILLING ---';
+IF (SELECT COUNT(*) FROM sys.objects WHERE type = 'P' AND name IN
+    ('sp_HoiVien_Luu', 'sp_HoiVien_SetActive', 'sp_GoiTap_Luu', 'sp_DangKyGoiTapMoi',
+     'sp_ThanhToan_Them', 'sp_HuyGoiTap', 'sp_DangKyGoi_DanhSach')) <> 7
+    THROW 52301, N'Smoke test membership: thiếu stored procedure bắt buộc.', 1;
 
-PRINT '1. Dang test: sp_TaoGoiTap...';
-IF NOT EXISTS (SELECT 1 FROM dbo.GoiTap WHERE PlanCode = 'VIP-12M')
-    EXEC dbo.sp_TaoGoiTap 'VIP-12M', N'Gói VIP 1 Năm', 365, 5000000, N'Tặng khăn, nước uống miễn phí';
+IF OBJECT_ID(N'dbo.vw_HoiVienSapHetHan', N'V') IS NULL
+    THROW 52302, N'Smoke test membership: thiếu view hội viên sắp hết hạn.', 1;
 
-PRINT '2. Dang test: sp_ThemHoiVien...';
--- Kiem tra xem email da ton tai chua, neu chua moi them
-IF NOT EXISTS (SELECT 1 FROM dbo.HoiVien WHERE Email = 'thien@email.com')
-    EXEC dbo.sp_ThemHoiVien N'Trần Phạm Hữu Thiên', '0901234567', 'thien@email.com', '2000-12-22', 'MALE';
+IF (SELECT COUNT(*) FROM sys.objects WHERE type IN ('FN', 'IF', 'TF')
+    AND name IN ('fn_TongDoanhThuHoiVien', 'fn_XepHangHoiVien')) <> 2
+    THROW 52303, N'Smoke test membership: thiếu function.', 1;
 
-DECLARE @MaHV INT = (SELECT TOP 1 MemberId FROM dbo.HoiVien WHERE Email = 'thien@email.com' ORDER BY MemberId DESC);
-DECLARE @MaGoi INT = (SELECT TOP 1 PlanId FROM dbo.GoiTap WHERE PlanCode = 'VIP-12M');
-DECLARE @MaNV INT = 1;
-
-PRINT '3. Dang test Transaction: sp_DangKyGoiTapMoi...';
--- Kiem tra xem hoi vien nay da co goi tap ACTIVE chua, neu chua moi dang ky
-IF NOT EXISTS (SELECT 1 FROM dbo.DangKyGoi WHERE MemberId = @MaHV AND Status = 'ACTIVE' AND EndDate >= GETDATE())
-BEGIN
-    EXEC dbo.sp_DangKyGoiTapMoi @MaHV, @MaGoi, @MaNV, '2026-10-01', 'BANK_TRANSFER';
-    PRINT '=> Dang ky goi tap moi thanh cong.';
-END
-ELSE
-BEGIN
-    PRINT '=> Hoi vien da co goi tap ACTIVE tu lan chay truoc. Bo qua dang ky!';
-END
-
-PRINT '4. Dang test View va Function...';
-SELECT * FROM dbo.vw_HoiVienSapHetHan;
-SELECT dbo.fn_TongDoanhThuHoiVien(@MaHV) AS TongDoanhThu, dbo.fn_XepHangHoiVien(@MaHV) AS HangThanhVien;
-
-PRINT '5. Dang test Trigger: trg_HoiVien_PreventDeleteActive...';
+BEGIN TRANSACTION SmokeMembership;
 BEGIN TRY
-    DELETE FROM dbo.HoiVien WHERE MemberId = @MaHV;
+    DECLARE @MemberId int, @PlanId int, @MembershipId bigint, @InvoiceId bigint, @PaymentId bigint;
+    DECLARE @EmployeeId int = (SELECT TOP (1) EmployeeId FROM dbo.NhanVien WHERE EmployeeType = 'RECEPTIONIST' AND IsActive = 1);
+    IF @EmployeeId IS NULL THROW 52304, N'Smoke test membership: thiếu lễ tân.', 1;
+
+    EXEC dbo.sp_HoiVien_Luu
+        @FullName=N'Hội viên Smoke Test', @Phone='0900000801', @Email='membership-smoke@example.test',
+        @DateOfBirth='20000101', @Gender='OTHER', @ChieuCao=170, @CanNang=65,
+        @SavedMemberId=@MemberId OUTPUT;
+
+    EXEC dbo.sp_GoiTap_Luu
+        @PlanCode='SMOKE-30', @PlanName=N'Gói smoke 30 ngày', @DurationDays=30,
+        @Price=300000, @MaxCheckInsPerDay=2, @AllowsClasses=1,
+        @SavedPlanId=@PlanId OUTPUT;
+
+    DECLARE @StartDate date = CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME()));
+
+    EXEC dbo.sp_DangKyGoiTapMoi
+        @MemberId=@MemberId, @PlanId=@PlanId, @EmployeeId=@EmployeeId,
+        @StartDate=@StartDate, @InitialPayment=100000, @PaymentMethod='CASH',
+        @MembershipId=@MembershipId OUTPUT, @InvoiceId=@InvoiceId OUTPUT;
+
+    IF (SELECT Status FROM dbo.HoaDon WHERE InvoiceId=@InvoiceId) <> 'PARTIAL'
+        THROW 52305, N'Smoke test membership: hóa đơn phải ở trạng thái PARTIAL.', 1;
+    IF (SELECT Status FROM dbo.DangKyGoi WHERE MembershipId=@MembershipId) <> 'PENDING'
+        THROW 52306, N'Smoke test membership: gói chưa trả đủ phải PENDING.', 1;
+
+    EXEC dbo.sp_ThanhToan_Them @InvoiceId=@InvoiceId, @EmployeeId=@EmployeeId,
+         @Amount=200000, @PaymentMethod='BANK_TRANSFER', @TransactionReference='SMOKE',
+         @PaymentId=@PaymentId OUTPUT;
+
+    IF (SELECT Status FROM dbo.HoaDon WHERE InvoiceId=@InvoiceId) <> 'PAID'
+        THROW 52307, N'Smoke test membership: hóa đơn phải chuyển PAID.', 1;
+    IF (SELECT Status FROM dbo.DangKyGoi WHERE MembershipId=@MembershipId) <> 'ACTIVE'
+        THROW 52308, N'Smoke test membership: gói phải kích hoạt sau khi trả đủ.', 1;
+
+    BEGIN TRY
+        DELETE dbo.HoiVien WHERE MemberId=@MemberId;
+        THROW 52309, N'Smoke test membership: trigger phải chặn xóa hội viên có gói active.', 1;
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() <> 53020 THROW;
+    END CATCH;
+
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION SmokeMembership;
+    PRINT N'ALL MEMBERSHIP AND BILLING SMOKE TESTS PASSED.';
 END TRY
 BEGIN CATCH
-    PRINT '=> TEST TRIGGER THANH CONG: He thong da chan thao tac xoa!';
-    PRINT '=> Thong bao loi hop le tu Trigger: ' + ERROR_MESSAGE();
-END CATCH
-
-PRINT '--- KET THUC TEST ---';
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
 GO

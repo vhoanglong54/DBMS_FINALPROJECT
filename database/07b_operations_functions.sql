@@ -204,8 +204,8 @@ RETURN
         FROM dbo.DatLop AS dl
         WHERE dl.SessionId = ll.SessionId
     ) AS bk
-    WHERE ll.StartAt >= @From
-      AND ll.StartAt < @To
+    WHERE (@From IS NULL OR ll.StartAt >= @From)
+      AND (@To IS NULL OR ll.StartAt < @To)
       AND (@TrainerId IS NULL OR ll.TrainerId = @TrainerId)
       AND (@RoomId IS NULL OR ll.RoomId = @RoomId)
       AND (@ClassId IS NULL OR ll.ClassId = @ClassId)

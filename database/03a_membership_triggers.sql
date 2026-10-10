@@ -1,4 +1,4 @@
-USE GymManagementDB;
+USE [$(DatabaseName)];
 GO
 
 SET ANSI_NULLS ON;
@@ -17,12 +17,10 @@ BEGIN
     IF EXISTS (
         SELECT 1 FROM deleted d 
         JOIN dbo.DangKyGoi dk ON d.MemberId = dk.MemberId 
-        WHERE dk.Status = 'ACTIVE' AND dk.EndDate >= GETDATE()
+        WHERE dk.Status = 'ACTIVE' AND dk.EndDate >= CONVERT(date, DATEADD(HOUR, 7, SYSUTCDATETIME()))
     )
     BEGIN
-        RAISERROR(N'Không thể xóa hội viên đang có gói tập!', 16, 1);
-        ROLLBACK TRANSACTION;
-        RETURN;
+        THROW 53020, N'Không thể xóa hội viên đang có gói tập; hãy ngừng hoạt động hội viên.', 1;
     END
     DELETE FROM dbo.HoiVien WHERE MemberId IN (SELECT MemberId FROM deleted);
 END;

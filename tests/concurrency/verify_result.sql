@@ -1,4 +1,4 @@
-USE [GymManagementDB];
+USE [$(DatabaseName)];
 GO
 
 DECLARE @DemoSessionId bigint = 0; -- <-- điền SessionId đã dùng
@@ -10,5 +10,5 @@ WHERE d.SessionId = @DemoSessionId
 ORDER BY d.BookedAt, d.BookingId;
 
 -- Đúng: 1 dòng CONFIRMED (HV0001) + 1 dòng WAITLISTED (HV0002).
-SELECT dbo.fn_SoChoConLai(@DemoSessionId) AS SoChoConLai; -- kỳ vọng 0
+SELECT dbo.fn_ChoTrongLop(@DemoSessionId) AS SoChoConLai; -- kỳ vọng 0
 GO

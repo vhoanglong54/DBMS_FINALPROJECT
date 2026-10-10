@@ -24,7 +24,10 @@ public sealed partial class MemberSearchController(IGymReportingRepository repor
             LogMemberSearchFailure(logger, ex);
             return View(new Models.MemberSearchViewModel
             {
-                Query = q, Status = status, Page = page, PageSize = pageSize,
+                Query = q,
+                Status = status,
+                Page = page,
+                PageSize = pageSize,
                 Notice = "Không tải được kết quả. Kiểm tra kết nối SQL Server và thử lại."
             });
         }

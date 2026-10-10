@@ -3,6 +3,13 @@ GO
 
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
 GO
 
 IF (SELECT COUNT(*) FROM sys.triggers WHERE name IN
@@ -28,7 +35,7 @@ IF (SELECT COUNT(*) FROM sys.objects WHERE type = 'P' AND name IN
     THROW 52204, N'Smoke test thất bại: thiếu stored procedure module Class Operations.', 1;
 
 IF (SELECT COUNT(*) FROM sys.objects WHERE type IN ('FN', 'IF', 'TF') AND name IN
-    ('fn_SoChoConLai', 'fn_HoiVien_CoGoiHieuLuc', 'fn_LichLop_TheoTuan')) <> 3
+    ('fn_ChoTrongLop', 'fn_GoiHieuLuc', 'fn_LichLopTheoKhoang')) <> 3
     THROW 52205, N'Smoke test thất bại: thiếu function module Class Operations.', 1;
 
 /*
@@ -42,6 +49,8 @@ BEGIN TRY
     DECLARE @RoomId int, @ClassId int, @TrainerId int, @SessionId bigint;
     DECLARE @Member1 int, @Member2 int, @Plan int, @SellerId int;
     DECLARE @Booking1 bigint, @Booking2 bigint, @Status1 varchar(20), @Status2 varchar(20);
+    DECLARE @TestStart datetime2(0) = DATEADD(HOUR, 18, CONVERT(datetime2(0), DATEADD(DAY, 7, CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME())))));
+    DECLARE @TestEnd datetime2(0) = DATEADD(HOUR, 1, @TestStart);
 
     EXEC dbo.sp_PhongTap_Upsert
         @RoomCode = 'ZZ-TEST-ROOM', @RoomName = N'Phòng test smoke', @Capacity = 10,
@@ -57,7 +66,7 @@ BEGIN TRY
 
     EXEC dbo.sp_LichLop_TaoLich
         @ClassId = @ClassId, @RoomId = @RoomId, @TrainerId = @TrainerId,
-        @StartAt = '2027-01-01T18:00:00', @EndAt = '2027-01-01T19:00:00', @Capacity = 1,
+        @StartAt = @TestStart, @EndAt = @TestEnd, @Capacity = 1,
         @NewSessionId = @SessionId OUTPUT;
 
     SELECT TOP (1) @Plan = PlanId FROM dbo.GoiTap WHERE AllowsClasses = 1 AND IsActive = 1;
@@ -88,8 +97,8 @@ BEGIN TRY
     IF @Status2 <> 'WAITLISTED'
         THROW 52209, N'Smoke test thất bại: hội viên thứ hai phải vào WAITLISTED khi capacity = 1.', 1;
 
-    IF dbo.fn_SoChoConLai(@SessionId) <> 0
-        THROW 52210, N'Smoke test thất bại: fn_SoChoConLai tính sai số chỗ còn lại.', 1;
+    IF dbo.fn_ChoTrongLop(@SessionId) <> 0
+        THROW 52210, N'Smoke test thất bại: fn_ChoTrongLop tính sai số chỗ còn lại.', 1;
 
     EXEC dbo.sp_DatLop_HuyCho @BookingId = @Booking1, @Reason = N'Test hủy để kiểm tra đôn waitlist';
     IF (SELECT Status FROM dbo.DatLop WHERE BookingId = @Booking2) <> 'CONFIRMED'
@@ -97,10 +106,12 @@ BEGIN TRY
 
     BEGIN TRY
         DECLARE @DummySession bigint;
+        DECLARE @OverlapStart datetime2(0) = DATEADD(MINUTE, 30, @TestStart);
+        DECLARE @OverlapEnd datetime2(0) = DATEADD(MINUTE, 30, @TestEnd);
 
         EXEC dbo.sp_LichLop_TaoLich
             @ClassId = @ClassId, @RoomId = @RoomId, @TrainerId = @TrainerId,
-            @StartAt = '2027-01-01T18:30:00', @EndAt = '2027-01-01T19:30:00', @Capacity = 1,
+            @StartAt = @OverlapStart, @EndAt = @OverlapEnd, @Capacity = 1,
             @NewSessionId = @DummySession OUTPUT;
 
         THROW 52212, N'Smoke test thất bại: trigger chống trùng lịch không hoạt động.', 1;

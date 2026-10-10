@@ -30,7 +30,7 @@ AS
     (
         SELECT COUNT(*) AS ConfirmedCount
         FROM dbo.DatLop AS d
-        WHERE d.SessionId = l.SessionId AND d.Status = 'CONFIRMED'
+        WHERE d.SessionId = l.SessionId AND d.Status IN ('CONFIRMED', 'ATTENDED', 'NO_SHOW')
     ) AS b;
 GO
 
@@ -56,7 +56,7 @@ AS
     (
         SELECT COUNT(*) AS ConfirmedCount
         FROM dbo.DatLop AS d
-        WHERE d.SessionId = l.SessionId AND d.Status = 'CONFIRMED'
+        WHERE d.SessionId = l.SessionId AND d.Status IN ('CONFIRMED', 'ATTENDED', 'NO_SHOW')
     ) AS b
     GROUP BY lt.ClassId, lt.ClassName;
 GO
