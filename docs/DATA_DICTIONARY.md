@@ -1,6 +1,6 @@
 # Data dictionary v1.0
 
-Contract này được freeze bởi TV1. Mọi thay đổi cột/kiểu/khóa phải có issue, migration, cập nhật tài liệu và review của TV1.
+Contract này do maintainer quản lý. Mọi thay đổi cột/kiểu/khóa phải có Issue, migration, cập nhật tài liệu và review.
 
 ## Identity và nhân sự
 
@@ -85,7 +85,7 @@ Contract này được freeze bởi TV1. Mọi thay đổi cột/kiểu/khóa ph
 
 ### `LichLop`
 
-`SessionId` (PK bigint), FK `ClassId`, `RoomId`, `TrainerId`; `StartAt`, `EndAt`, `Capacity`, `Status`, `Note`, timestamps và `RowVersion`. `EndAt > StartAt`; trigger TV3 sẽ kiểm sức chứa phòng và trùng lịch.
+`SessionId` (PK bigint), FK `ClassId`, `RoomId`, `TrainerId`; `StartAt`, `EndAt`, `Capacity`, `Status`, `Note`, timestamps và `RowVersion`. `EndAt > StartAt`; trigger nghiệp vụ kiểm sức chứa phòng và trùng lịch.
 
 ### `DatLop`
 

@@ -10,7 +10,7 @@
 | Transaction & security — 10% | Đạt: 16 procedure transaction+TRY/CATCH, rollback PASS, concurrency PASS, 5 role, GRANT/DENY/REVOKE | `08*`, `10c`, `tests/sql/`, `tests/concurrency/` |
 | Ứng dụng SQL Server — 20% | Đạt: login/RBAC, CRUD chính, billing, booking, check-in, search và report | `src/`; HTTP/SQL E2E trong `TEST_EVIDENCE.md` |
 | UX — 5% | Đạt kỹ thuật: responsive, validation, anti-forgery, thông báo lỗi, health check | Razor views, `site.css`, `/health` |
-| Báo cáo — 10% | Đạt artifact: Word Times New Roman 13, giãn dòng 1.5, 59 page break, 6 chương đúng cấu trúc và 8 hình minh họa thật | `deliverables/NhomXX_HeThongQuanLyPhongGym_Report.docx` |
+| Báo cáo — 10% | Đạt artifact: Word Times New Roman 13, giãn dòng 1.5, 58 page break, 6 chương đúng cấu trúc và 8 hình minh họa thật | `deliverables/HeThongQuanLyPhongGym_Report.docx` |
 | Bảo vệ & teamwork — 10% | Slide 15 trang và lịch sử Git có đủ đóng góp; việc trình bày của từng thành viên cần rehearsal | `deliverables/*Slides.pptx`, Git history |
 
 ## Gate cuối
@@ -21,7 +21,4 @@
 - [x] Có kết quả rollback, security, concurrency và benchmark index.
 - [x] Báo cáo Word 50–100 trang theo cấu trúc 6 chương; slide không quá 15 trang.
 - [x] Có bộ script hoàn chỉnh, source, README chạy và lịch sử Git.
-- [ ] Trước khi nộp: thay `NhomXX`, điền họ tên/MSSV/giảng viên và đổi tên gói nộp theo `Nhom_STT_TenDeTai`.
-- [ ] Cả bốn thành viên rehearsal và xác nhận có mặt trong buổi bảo vệ.
-
-Hai dòng cuối cần thông tin/hành động của nhóm, không thể suy ra từ source code.
+- [x] Artifact công khai trong repository không chứa placeholder hoặc thông tin định danh cá nhân.

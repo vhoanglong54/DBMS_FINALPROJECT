@@ -207,17 +207,10 @@ add_field(footer, "PAGE")
 
 title = doc.add_paragraph(style="Title"); title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 title.add_run("BÁO CÁO ĐỒ ÁN HỆ QUẢN TRỊ CƠ SỞ DỮ LIỆU\n\nHỆ THỐNG QUẢN LÝ PHÒNG GYM")
-for line in ["Học phần: DBMS330284", "Nhóm: NhomXX", "Giảng viên: ____________________", "Thành viên: điền họ tên và MSSV trước khi nộp", "Năm học 2026"]:
+for line in ["Học phần: DBMS330284", "Đề tài: Hệ thống quản lý phòng gym", "Năm học 2026"]:
     p=doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.add_run(line)
 doc.add_page_break()
 
-doc.add_heading("Lời cam đoan và phân công", level=1)
-doc.add_paragraph("Nhóm cam đoan thiết kế, mã nguồn, script và kết quả kiểm thử trong báo cáo được xây dựng cho đề tài Hệ thống quản lý phòng gym. Lịch sử đóng góp được lưu trên GitHub; công việc mới được quản lý bằng Issues và Pull Requests.")
-table=doc.add_table(rows=5, cols=4); table.style="Table Grid"
-for j,v in enumerate(["Vai trò","Họ tên","MSSV","Phần phụ trách"]): set_cell_text(table.rows[0].cells[j],v)
-for i,role in enumerate(["TV1 – Leader","TV2","TV3","TV4"],1):
-    for j,v in enumerate([role,"________________","________________",["Kiến trúc, tích hợp, security, kiểm thử","Membership và billing","Lớp, booking, check-in","Dashboard, báo cáo, UX"][i-1]]): set_cell_text(table.rows[i].cells[j],v)
-doc.add_page_break()
 doc.add_heading("Mục lục",level=1)
 toc=doc.add_paragraph(); add_field(toc,"TOC \\o \"1-3\" \\h \\z \\u")
 doc.add_paragraph("Mở file bằng Microsoft Word và chọn Update Field để cập nhật số trang mục lục.")
@@ -236,7 +229,6 @@ for caption in [
     doc.add_paragraph(caption)
 doc.add_heading("Danh mục bảng", level=1)
 for caption in [
-    "Bảng 0.1. Phân công bốn thành viên",
     "Bảng 2.1. Từ điển dữ liệu và quan hệ",
     "Bảng 3.1. Số lượng đối tượng SQL Server",
     "Bảng 4.1. Chính sách phân quyền theo vai trò",
@@ -313,9 +305,9 @@ doc.add_page_break(); doc.add_heading("PHỤ LỤC B. HƯỚNG DẪN DEMO",level
 for step in ["Chạy database/run-database.ps1 với -DropExisting trên database demo.","Cấu hình ConnectionStrings:GymDb bằng User Secrets.","Đăng nhập bốn tài khoản và minh họa menu theo role.","Tạo hội viên, mua gói, trả một phần rồi trả đủ.","Tạo lịch, đặt hai hội viên vào lớp một chỗ để minh họa hàng chờ.","Check-in và mở dashboard/báo cáo.","Chạy security, concurrency và index scripts."]:
     doc.add_paragraph(step,style="List Number")
 
-report_path=OUT/"NhomXX_HeThongQuanLyPhongGym_Report.docx"
+report_path=OUT/"HeThongQuanLyPhongGym_Report.docx"
 doc.core_properties.title="Hệ thống quản lý phòng gym"
 doc.core_properties.subject="Đồ án DBMS330284"
-doc.core_properties.author="Nhóm NhomXX"
+doc.core_properties.author="DBMS330284 Project"
 doc.save(report_path)
 print(report_path)
