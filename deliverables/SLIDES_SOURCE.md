@@ -1,7 +1,6 @@
 ---
 title: "HỆ THỐNG QUẢN LÝ PHÒNG GYM"
-subtitle: "Đồ án DBMS330284 · NhomXX"
-author: "TV1 · TV2 · TV3 · TV4"
+subtitle: "Đồ án DBMS330284"
 date: "2026"
 ---
 
