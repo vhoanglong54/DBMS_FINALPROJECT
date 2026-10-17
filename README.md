@@ -14,9 +14,9 @@ ASP.NET Core MVC .NET 8 kết nối Microsoft SQL Server, bao phủ hồ sơ h�
 | `docs/RUBRIC_COMPLIANCE.md` | Ma trận đối chiếu từng tiêu chí rubric |
 | `docs/TEST_EVIDENCE.md` | Kết quả kiểm thử đã chạy và số liệu thực nghiệm |
 | `deliverables/` | Báo cáo Word, slide và ảnh minh họa |
-| `tools/` | Công cụ tái tạo báo cáo và chụp ảnh giao diện |
+| `tools/` | Công cụ tái tạo báo cáo và bằng chứng SQL Server |
 
-Điểm bắt đầu để đọc project là tài liệu kiến trúc, sau đó đến data dictionary và `database/run-database.ps1`. Luồng làm việc Git được mô tả ngắn gọn trong `docs/CONTRIBUTING.md`.
+Điểm bắt đầu để đọc project là tài liệu kiến trúc, sau đó đến data dictionary và `database/run-database.ps1`.
 
 ## Vai trò của các nhánh
 
@@ -82,5 +82,3 @@ Muốn đưa dữ liệu demo về trạng thái ban đầu, dừng ứng dụng
 - `tests/run-app-smoke.ps1`: đăng nhập thật và kiểm tra các route chính.
 - [TEST_EVIDENCE.md](docs/TEST_EVIDENCE.md): kết quả kiểm thử đã chạy.
 - [RUBRIC_COMPLIANCE.md](docs/RUBRIC_COMPLIANCE.md): ma trận đối chiếu rubric.
-
-Mọi công việc mới và bàn giao đều thực hiện bằng GitHub Issues/Pull Requests theo [CONTRIBUTING.md](docs/CONTRIBUTING.md).
