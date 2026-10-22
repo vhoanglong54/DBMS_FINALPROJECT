@@ -69,6 +69,89 @@ EXEC dbo.sp_AuthenticateUser @Username = 'admin';
 IF (SELECT COUNT(*) FROM #AuthenticationResult WHERE RoleCode = 'ADMIN' AND DATALENGTH(PasswordHash) = 32) <> 1
     THROW 51106, N'Smoke test thất bại: procedure xác thực không trả đúng tài khoản admin.', 1;
 
+IF OBJECT_ID(N'dbo.sp_StaffAccount_Create', N'P') IS NULL
+   OR OBJECT_ID(N'dbo.sp_StaffAccount_List', N'P') IS NULL
+   OR OBJECT_ID(N'dbo.sp_StaffAccount_SuggestCode', N'P') IS NULL
+    THROW 51108, N'Smoke test thất bại: thiếu procedure cấp tài khoản nhân viên.', 1;
+
+DECLARE @AdminUserId int = (SELECT UserId FROM dbo.NguoiDung WHERE Username = 'admin');
+CREATE TABLE #SuggestedEmployeeCode (EmployeeCode varchar(20));
+INSERT #SuggestedEmployeeCode
+EXEC dbo.sp_StaffAccount_SuggestCode @ActorUserId = @AdminUserId;
+
+IF (SELECT COUNT(*) FROM #SuggestedEmployeeCode) <> 1
+   OR EXISTS
+   (
+       SELECT 1 FROM #SuggestedEmployeeCode AS suggested
+       INNER JOIN dbo.NhanVien AS existing ON existing.EmployeeCode = suggested.EmployeeCode
+   )
+    THROW 51111, N'Smoke test thất bại: mã nhân viên gợi ý bị trùng hoặc không có.', 1;
+
+DECLARE @TestSuffix char(8) = LEFT(REPLACE(CONVERT(varchar(36), NEWID()), '-', ''), 8);
+DECLARE @TestEmployeeCode varchar(20) = 'NV-T-' + UPPER(@TestSuffix);
+DECLARE @TestUsername varchar(50) = 'smoke_' + LOWER(@TestSuffix);
+DECLARE @TestHash varbinary(64) = CONVERT(varbinary(64), REPLICATE('0', 64), 2);
+DECLARE @TestSalt varbinary(32) = CONVERT(varbinary(32), REPLICATE('0', 32), 2);
+
+BEGIN TRY
+    BEGIN TRANSACTION;
+    EXEC dbo.sp_StaffAccount_Create
+        @ActorUserId = @AdminUserId,
+        @EmployeeCode = @TestEmployeeCode,
+        @FullName = N'Nhân viên kiểm thử',
+        @Phone = '0900000099',
+        @Email = NULL,
+        @HireDate = '20261022',
+        @EmployeeType = 'TRAINER',
+        @Username = @TestUsername,
+        @PasswordHash = @TestHash,
+        @PasswordSalt = @TestSalt,
+        @PasswordIterations = 100000;
+
+    IF NOT EXISTS
+    (
+        SELECT 1 FROM dbo.NguoiDung AS nd
+        INNER JOIN dbo.NhanVien AS nv ON nv.UserId = nd.UserId
+        INNER JOIN dbo.VaiTro AS vt ON vt.RoleId = nd.RoleId
+        WHERE nd.Username = @TestUsername AND nd.MustChangePassword = 1
+          AND nv.EmployeeCode = @TestEmployeeCode AND vt.RoleCode = 'TRAINER'
+    )
+        THROW 51109, N'Smoke test thất bại: tài khoản mới thiếu nhân viên, vai trò hoặc cờ đổi mật khẩu.', 1;
+
+    ROLLBACK TRANSACTION;
+END TRY
+BEGIN CATCH
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+    THROW;
+END CATCH;
+
+IF EXISTS (SELECT 1 FROM dbo.NguoiDung WHERE Username = @TestUsername)
+    THROW 51110, N'Smoke test thất bại: dữ liệu thử không được rollback.', 1;
+
+DECLARE @DuplicateUsername varchar(50) = @TestUsername + '_dup';
+BEGIN TRY
+    EXEC dbo.sp_StaffAccount_Create
+        @ActorUserId = @AdminUserId,
+        @EmployeeCode = 'NV-ADMIN',
+        @FullName = N'Nhân viên trùng mã',
+        @Phone = '0900000099',
+        @Email = NULL,
+        @HireDate = '20261022',
+        @EmployeeType = 'TRAINER',
+        @Username = @DuplicateUsername,
+        @PasswordHash = @TestHash,
+        @PasswordSalt = @TestSalt,
+        @PasswordIterations = 100000;
+
+    THROW 51112, N'Smoke test thất bại: mã nhân viên trùng không bị chặn.', 1;
+END TRY
+BEGIN CATCH
+    IF ERROR_NUMBER() <> 51046 THROW;
+END CATCH;
+
+IF EXISTS (SELECT 1 FROM dbo.NguoiDung WHERE Username = @DuplicateUsername)
+    THROW 51113, N'Smoke test thất bại: tài khoản trùng mã vẫn được tạo.', 1;
+
 BEGIN TRANSACTION;
 BEGIN TRY
     INSERT dbo.GoiTap(PlanCode, PlanName, DurationDays, Price, MaxCheckInsPerDay, AllowsClasses)

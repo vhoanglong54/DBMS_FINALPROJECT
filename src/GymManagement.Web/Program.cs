@@ -42,10 +42,12 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddScoped<ISqlConnectionFactory, SqlConnectionFactory>();
 builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
+builder.Services.AddScoped<IStaffAccountRepository, SqlStaffAccountRepository>();
 builder.Services.AddScoped<IMemberRepository, SqlMemberRepository>();
 builder.Services.AddScoped<IMembershipRepository, SqlMembershipRepository>();
 builder.Services.AddScoped<IOperationsRepository, SqlOperationsRepository>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IStaffAccountService, StaffAccountService>();
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddScoped<IGymReportingRepository, SqlGymReportingRepository>();
 builder.Services.AddSingleton(TimeProvider.System);

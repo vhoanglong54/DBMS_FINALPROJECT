@@ -59,6 +59,7 @@
                     @if (User.IsInRole(RoleCodes.Admin))
                     {
                         <a class="@NavClass("Plans")" asp-controller="Plans" asp-action="Index" aria-current="@(currentController == "Plans" ? "page" : null)">Danh mục gói</a>
+                        <a class="@NavClass("StaffAccounts")" asp-controller="StaffAccounts" asp-action="Index" aria-current="@(currentController == "StaffAccounts" ? "page" : null)">Nhân sự</a>
                     }
                     @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Trainer) || User.IsInRole(RoleCodes.Receptionist))
                     {

@@ -1,0 +1,43 @@
+@model IReadOnlyList<StaffAccountRow>
+@{
+    ViewData["Title"] = "Tài khoản nhân viên";
+}
+
+<div class="page-heading">
+    <div><p class="eyebrow">Nhân sự</p><h1>Tài khoản nhân viên</h1></div>
+    <a class="button" asp-action="Create">Thêm nhân viên</a>
+</div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success" role="status">@success</div>
+}
+@if (ViewData["Notice"] is string notice)
+{
+    <div class="alert alert-warning" role="alert">@notice</div>
+}
+
+<div class="table-card">
+    <table>
+        <thead><tr><th>Mã nhân viên</th><th>Họ và tên</th><th>Vị trí</th><th>Tên đăng nhập</th><th>Trạng thái</th></tr></thead>
+        <tbody>
+        @foreach (var account in Model)
+        {
+            <tr>
+                <td>@account.EmployeeCode</td>
+                <td>@account.FullName</td>
+                <td>@(account.EmployeeType switch
+                    {
+                        "MANAGER" => "Quản lý",
+                        "RECEPTIONIST" => "Lễ tân",
+                        "TRAINER" => "Huấn luyện viên",
+                        "ACCOUNTANT" => "Kế toán",
+                        _ => account.EmployeeType
+                    })</td>
+                <td>@account.Username</td>
+                <td>@(account.IsActive ? "Hoạt động" : "Đã ngừng")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

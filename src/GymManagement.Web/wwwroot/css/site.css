@@ -708,6 +708,10 @@ input[type="radio"] {
     font-size: 1rem;
 }
 
+.form-card .staff-form-section {
+    margin-top: 1.5rem;
+}
+
 .form-card > label:not(:first-child) {
     margin-top: .9rem;
 }

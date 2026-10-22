@@ -19,3 +19,11 @@ Các nhóm file:
 - `10*`: kiểm thử tự động và gate rubric.
 
 `-DropExisting` xóa đúng database được truyền vào; không dùng trên dữ liệu cần giữ. Để demo bốn SQL login riêng, bật `-CreateDemoLogins` và truyền bốn mật khẩu không phải placeholder.
+
+Để cập nhật riêng procedure và quyền bảo mật cho database đã có dữ liệu (bao gồm chức năng cấp tài khoản nhân viên), chạy:
+
+```powershell
+.\database\run-database.ps1 -Server '.\SQLEXPRESS' -DatabaseName GymManagementDemo -SecurityOnly
+```
+
+Chế độ này không chạy lại schema, seed hoặc smoke test và không cho dùng chung với `-DropExisting`.

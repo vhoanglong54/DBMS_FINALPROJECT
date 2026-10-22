@@ -186,6 +186,152 @@ BEGIN
 END;
 GO
 
+/* Quản trị viên cấp tài khoản và hồ sơ nhân viên trong cùng một giao dịch. */
+CREATE OR ALTER PROCEDURE dbo.sp_StaffAccount_Create
+    @ActorUserId int,
+    @EmployeeCode varchar(20),
+    @FullName nvarchar(120),
+    @Phone varchar(15),
+    @Email varchar(254) = NULL,
+    @HireDate date,
+    @EmployeeType varchar(20),
+    @Username varchar(50),
+    @PasswordHash varbinary(64),
+    @PasswordSalt varbinary(32),
+    @PasswordIterations int
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        IF NOT EXISTS
+        (
+            SELECT 1
+            FROM dbo.NguoiDung AS nd
+            INNER JOIN dbo.VaiTro AS vt ON vt.RoleId = nd.RoleId
+            WHERE nd.UserId = @ActorUserId AND nd.IsActive = 1
+              AND vt.RoleCode = 'ADMIN' AND vt.IsActive = 1
+        )
+            THROW 51040, N'Chỉ quản trị viên được cấp tài khoản nhân viên.', 1;
+
+        IF DATALENGTH(@PasswordHash) < 32 OR DATALENGTH(@PasswordSalt) < 16
+            THROW 51041, N'Hash hoặc salt mật khẩu không hợp lệ.', 1;
+        IF @PasswordIterations NOT BETWEEN 100000 AND 1000000
+            THROW 51042, N'Số vòng PBKDF2 không hợp lệ.', 1;
+
+        DECLARE @RoleCode varchar(30) = CASE @EmployeeType
+            WHEN 'MANAGER' THEN 'ADMIN'
+            WHEN 'RECEPTIONIST' THEN 'RECEPTIONIST'
+            WHEN 'TRAINER' THEN 'TRAINER'
+            WHEN 'ACCOUNTANT' THEN 'ACCOUNTANT'
+        END;
+        DECLARE @RoleId smallint;
+        SELECT @RoleId = RoleId FROM dbo.VaiTro
+        WHERE RoleCode = @RoleCode AND IsActive = 1;
+        IF @RoleId IS NULL
+            THROW 51043, N'Vai trò nhân viên không hợp lệ hoặc đã ngừng hoạt động.', 1;
+
+        DECLARE @NormalizedUsername varchar(50) = LOWER(LTRIM(RTRIM(@Username)));
+        DECLARE @NormalizedEmployeeCode varchar(20) = UPPER(LTRIM(RTRIM(@EmployeeCode)));
+        IF NULLIF(@NormalizedUsername, '') IS NULL
+           OR NULLIF(@NormalizedEmployeeCode, '') IS NULL
+           OR NULLIF(LTRIM(RTRIM(@FullName)), N'') IS NULL
+            THROW 51044, N'Thiếu thông tin tài khoản hoặc nhân viên.', 1;
+
+        IF EXISTS (SELECT 1 FROM dbo.NhanVien WHERE EmployeeCode = @NormalizedEmployeeCode)
+            THROW 51046, N'Mã nhân viên đã được sử dụng.', 1;
+
+        INSERT dbo.NguoiDung
+            (RoleId, Username, PasswordHash, PasswordSalt, PasswordIterations, MustChangePassword)
+        VALUES
+            (@RoleId, @NormalizedUsername, @PasswordHash, @PasswordSalt, @PasswordIterations, 1);
+
+        DECLARE @NewUserId int = CONVERT(int, SCOPE_IDENTITY());
+        INSERT dbo.NhanVien
+            (UserId, EmployeeCode, FullName, Phone, Email, HireDate, EmployeeType)
+        VALUES
+            (@NewUserId, @NormalizedEmployeeCode, LTRIM(RTRIM(@FullName)), @Phone,
+             NULLIF(LTRIM(RTRIM(@Email)), ''), @HireDate, @EmployeeType);
+
+        DECLARE @AuditValues nvarchar(max) =
+            (SELECT @NormalizedUsername AS Username,
+                    @NormalizedEmployeeCode AS EmployeeCode,
+                    @EmployeeType AS EmployeeType
+             FOR JSON PATH, WITHOUT_ARRAY_WRAPPER);
+        INSERT dbo.AuditLog (TableName, ActionType, EntityKey, NewValues, ChangedByUserId)
+        VALUES (N'NguoiDung', 'INSERT', CONVERT(nvarchar(200), @NewUserId),
+                @AuditValues, @ActorUserId);
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_StaffAccount_List
+    @ActorUserId int
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS
+    (
+        SELECT 1 FROM dbo.NguoiDung AS nd
+        INNER JOIN dbo.VaiTro AS vt ON vt.RoleId = nd.RoleId
+        WHERE nd.UserId = @ActorUserId AND nd.IsActive = 1
+          AND vt.RoleCode = 'ADMIN' AND vt.IsActive = 1
+    )
+        THROW 51040, N'Chỉ quản trị viên được xem tài khoản nhân viên.', 1;
+
+    SELECT nv.EmployeeCode, nv.FullName, nv.EmployeeType,
+           nd.Username, nd.IsActive AS UserIsActive
+    FROM dbo.NhanVien AS nv
+    INNER JOIN dbo.NguoiDung AS nd ON nd.UserId = nv.UserId
+    ORDER BY nv.EmployeeCode;
+END;
+GO
+
+/* Gợi ý mã nhân viên kế tiếp; mã chỉ được giữ chỗ khi tạo thành công. */
+CREATE OR ALTER PROCEDURE dbo.sp_StaffAccount_SuggestCode
+    @ActorUserId int
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS
+    (
+        SELECT 1 FROM dbo.NguoiDung AS nd
+        INNER JOIN dbo.VaiTro AS vt ON vt.RoleId = nd.RoleId
+        WHERE nd.UserId = @ActorUserId AND nd.IsActive = 1
+          AND vt.RoleCode = 'ADMIN' AND vt.IsActive = 1
+    )
+        THROW 51040, N'Chỉ quản trị viên được xem mã nhân viên kế tiếp.', 1;
+
+    DECLARE @NextNumber bigint =
+    (
+        SELECT ISNULL(MAX(TRY_CONVERT(bigint, SUBSTRING(EmployeeCode, 4, 17))), 0) + 1
+        FROM dbo.NhanVien
+        WHERE EmployeeCode LIKE 'NV-%'
+          AND SUBSTRING(EmployeeCode, 4, 17) <> ''
+          AND SUBSTRING(EmployeeCode, 4, 17) NOT LIKE '%[^0-9]%'
+    );
+
+    IF @NextNumber > 99999999999999999
+        THROW 51045, N'Đã hết dải mã nhân viên tự động.', 1;
+
+    SELECT 'NV-' + CASE WHEN @NextNumber <= 9999
+        THEN RIGHT('0000' + CONVERT(varchar(17), @NextNumber), 4)
+        ELSE CONVERT(varchar(17), @NextNumber)
+    END AS EmployeeCode;
+END;
+GO
+
 /* Admin có toàn quyền trong database project. */
 GRANT CONTROL ON DATABASE::[$(DatabaseName)] TO rl_GymAdmin;
 
@@ -226,6 +372,9 @@ GRANT EXECUTE ON dbo.sp_AuthenticateUser TO rl_GymApp;
 GRANT EXECUTE ON dbo.sp_RecordFailedLogin TO rl_GymApp;
 GRANT EXECUTE ON dbo.sp_RecordSuccessfulLogin TO rl_GymApp;
 GRANT EXECUTE ON dbo.sp_ChangePassword TO rl_GymApp;
+GRANT EXECUTE ON dbo.sp_StaffAccount_Create TO rl_GymApp;
+GRANT EXECUTE ON dbo.sp_StaffAccount_List TO rl_GymApp;
+GRANT EXECUTE ON dbo.sp_StaffAccount_SuggestCode TO rl_GymApp;
 DENY SELECT, INSERT, UPDATE, DELETE ON SCHEMA::dbo TO rl_GymApp;
 
 /* REVOKE minh họa: bảo đảm Trainer không giữ quyền đọc dữ liệu tài chính nếu từng được cấp trước đó. */

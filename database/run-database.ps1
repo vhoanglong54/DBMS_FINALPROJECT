@@ -7,6 +7,7 @@ param(
 
     [switch]$DropExisting,
     [switch]$SkipTests,
+    [switch]$SecurityOnly,
     [switch]$CreateDemoLogins,
 
     [string]$AdminPassword = 'CHANGE_ME_Admin',
@@ -26,6 +27,15 @@ if ($DatabaseName -in @('master', 'model', 'msdb', 'tempdb')) {
 
 if ($CreateDemoLogins -and @($AdminPassword, $ReceptionPassword, $TrainerPassword, $AccountantPassword).Where({ $_ -like 'CHANGE_ME*' }).Count -gt 0) {
     throw 'Khi bật CreateDemoLogins, phải truyền đủ bốn mật khẩu không phải placeholder.'
+}
+
+if ($SecurityOnly -and $DropExisting) {
+    throw 'Không thể dùng SecurityOnly cùng DropExisting.'
+}
+
+if ($SecurityOnly) {
+    & $sqlcmd.Source -S $Server -E -b -r 1 -d master -Q "IF DB_ID(N'$DatabaseName') IS NULL THROW 51000, N'Database chưa tồn tại.', 1;"
+    if ($LASTEXITCODE -ne 0) { throw "Database $DatabaseName chưa tồn tại." }
 }
 
 if ($DropExisting) {
@@ -59,7 +69,11 @@ $scripts = @(
     'database\09b_operations_seed_demo.sql'
 )
 
-if (-not $SkipTests) {
+if ($SecurityOnly) {
+    $scripts = @('database\08_security.sql')
+}
+
+if (-not $SkipTests -and -not $SecurityOnly) {
     $scripts += @(
         'database\10_smoke_tests.sql',
         'database\10a_membership_smoke_tests.sql',
@@ -89,4 +103,9 @@ foreach ($relativePath in $scripts) {
     if ($LASTEXITCODE -ne 0) { throw "Script thất bại: $relativePath (exit $LASTEXITCODE)." }
 }
 
-Write-Host "Database $DatabaseName đã được cài đặt và kiểm thử thành công." -ForegroundColor Green
+if ($SecurityOnly) {
+    Write-Host "Database $DatabaseName đã cập nhật các đối tượng bảo mật; không chạy lại schema hoặc seed." -ForegroundColor Green
+}
+else {
+    Write-Host "Database $DatabaseName đã được cài đặt và kiểm thử thành công." -ForegroundColor Green
+}

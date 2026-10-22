@@ -36,7 +36,7 @@ Yêu cầu SQL Server Express và `sqlcmd`. Nên dùng database riêng để th�
 
 Runner tạo database sạch, chạy toàn bộ schema/module/security/seed và bốn tầng smoke test. Không dùng `-DropExisting` với database có dữ liệu cần giữ.
 
-Kết quả chuẩn đã kiểm chứng: 15 bảng, 43 CHECK, 19 FK, 6 trigger, 9 view, 20 non-PK index, 42 procedure, 9 function, 16 procedure transaction và 5 database role.
+Kết quả chuẩn của bản cài mới: 15 bảng, 43 CHECK, 19 FK, 6 trigger, 9 view, 20 non-PK index, 44 procedure, 9 function, 17 procedure transaction và 5 database role.
 
 ## Chạy ứng dụng
 
@@ -60,6 +60,14 @@ Tài khoản demo:
 | `ketoan` | `KeToan@123` | Kế toán |
 
 Sau khi đăng nhập, nhân viên có thể chọn **Đổi mật khẩu** trên thanh tài khoản. Hệ thống yêu cầu nhập mật khẩu hiện tại, mật khẩu mới (8–128 ký tự) và xác nhận. Nếu `NguoiDung.MustChangePassword = 1`, tài khoản sẽ được đưa thẳng đến trang đổi mật khẩu và chưa thể mở các chức năng khác; đổi thành công sẽ xóa cờ này qua `dbo.sp_ChangePassword`. Các tài khoản seed ở trên có cờ bằng `0`; nếu đổi mật khẩu demo, mật khẩu mẫu trong bảng sẽ không còn đăng nhập được trên database đó.
+
+Quản trị viên có thể mở **Nhân sự → Thêm nhân viên** để tạo hồ sơ nhân viên và cấp tài khoản cùng lúc. Mật khẩu ban đầu chỉ được băm và lưu bằng salt riêng; nhân viên sẽ đổi mật khẩu khi đăng nhập lần đầu. Mã nhân viên được gợi ý tự động từ dữ liệu hiện có (`NV-0001`, `NV-0002`…), nhưng quản trị viên vẫn có thể sửa trước khi lưu. Nếu nhập mã đã có, form báo riêng “Mã nhân viên đã được sử dụng.”; ràng buộc `UNIQUE` tại database vẫn chặn trùng khi hai người cùng mở form.
+
+Nếu database đã được cài trước khi có chức năng này, chạy lệnh sau một lần để cập nhật procedure/quyền, **không chạy lại schema hoặc seed**:
+
+```powershell
+.\database\run-database.ps1 -Server '.\SQLEXPRESS' -DatabaseName 'GymManagementDemo' -SecurityOnly
+```
 
 ## Kiểm tra thao tác nghiệp vụ
 
