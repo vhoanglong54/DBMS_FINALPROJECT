@@ -30,6 +30,19 @@ public sealed class Pbkdf2PasswordHasherTests
         Assert.False(result);
     }
 
+    [Fact]
+    public void HashCreatesFreshSaltAndVerifiableHash()
+    {
+        var first = _hasher.Hash("Another@123", 100_000);
+        var second = _hasher.Hash("Another@123", 100_000);
+
+        Assert.Equal(16, first.Salt.Length);
+        Assert.Equal(32, first.Hash.Length);
+        Assert.False(first.Salt.SequenceEqual(second.Salt));
+        Assert.True(_hasher.Verify("Another@123", first.Salt, first.Hash, first.Iterations));
+        Assert.False(_hasher.Verify("Wrong@123", first.Salt, first.Hash, first.Iterations));
+    }
+
     [Theory]
     [InlineData(99_999)]
     [InlineData(1_000_001)]

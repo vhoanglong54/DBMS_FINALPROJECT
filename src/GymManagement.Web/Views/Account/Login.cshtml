@@ -27,6 +27,11 @@
         </div>
         <p class="muted">Đăng nhập bằng tài khoản do quản trị viên cấp để bắt đầu ca làm việc.</p>
 
+        @if (TempData["LoginNotice"] is string notice)
+        {
+            <div class="alert alert-warning" role="alert">@notice</div>
+        }
+
         <form asp-action="Login" method="post">
             <input asp-for="ReturnUrl" type="hidden" />
             <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>

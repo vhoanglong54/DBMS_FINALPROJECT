@@ -54,6 +54,28 @@ public sealed class AuthenticationRepository(ISqlConnectionFactory connectionFac
     public Task RecordSuccessfulLoginAsync(int userId, CancellationToken cancellationToken) =>
         ExecuteUserProcedureAsync("dbo.sp_RecordSuccessfulLogin", userId, cancellationToken);
 
+    public async Task ChangePasswordAsync(
+        int userId,
+        byte[] passwordHash,
+        byte[] passwordSalt,
+        int passwordIterations,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = connectionFactory.CreateConnection();
+        await using var command = new SqlCommand("dbo.sp_ChangePassword", connection)
+        {
+            CommandType = CommandType.StoredProcedure,
+            CommandTimeout = 15
+        };
+        command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+        command.Parameters.Add("@PasswordHash", SqlDbType.VarBinary, 64).Value = passwordHash;
+        command.Parameters.Add("@PasswordSalt", SqlDbType.VarBinary, 32).Value = passwordSalt;
+        command.Parameters.Add("@PasswordIterations", SqlDbType.Int).Value = passwordIterations;
+
+        await connection.OpenAsync(cancellationToken);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private async Task ExecuteUserProcedureAsync(
         string procedureName,
         int userId,

@@ -990,8 +990,17 @@ dd {
 
     .brand-copy small,
     .user-identity,
-    .button-compact {
+    .user-avatar {
         display: none;
+    }
+
+    .user-menu {
+        gap: .35rem;
+    }
+
+    .user-menu .button-compact {
+        padding: .4rem .5rem;
+        font-size: .68rem;
     }
 
     .container {
@@ -1035,6 +1044,10 @@ dd {
 }
 
 @media (max-width: 460px) {
+    .topbar .brand-copy {
+        display: none;
+    }
+
     .brand-mark,
     .auth-icon {
         width: 34px;

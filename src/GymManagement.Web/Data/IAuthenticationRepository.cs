@@ -7,4 +7,6 @@ public interface IAuthenticationRepository
     Task<AuthenticatedUser?> FindByUsernameAsync(string username, CancellationToken cancellationToken);
     Task RecordFailedLoginAsync(int userId, CancellationToken cancellationToken);
     Task RecordSuccessfulLoginAsync(int userId, CancellationToken cancellationToken);
+    Task ChangePasswordAsync(int userId, byte[] passwordHash, byte[] passwordSalt,
+        int passwordIterations, CancellationToken cancellationToken);
 }

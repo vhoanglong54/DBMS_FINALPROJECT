@@ -3,6 +3,8 @@
     var reportType = Context.Request.Query["type"].ToString();
     var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "Người dùng";
     var userInitial = string.IsNullOrWhiteSpace(displayName) ? "G" : displayName.Trim()[..1].ToUpperInvariant();
+    var mustChangePassword = string.Equals(User.FindFirst("must_change_password")?.Value,
+        bool.TrueString, StringComparison.OrdinalIgnoreCase);
     var roleName = User.IsInRole(RoleCodes.Admin) ? "Quản trị viên"
         : User.IsInRole(RoleCodes.Receptionist) ? "Lễ tân"
         : User.IsInRole(RoleCodes.Accountant) ? "Kế toán"
@@ -35,12 +37,14 @@
     <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
     <header class="topbar">
         <div class="topbar-inner">
-            <a class="brand" asp-controller="Home" asp-action="Index" aria-label="Gym Manager - Trang tổng quan">
+            <a class="brand" asp-controller="@(mustChangePassword ? "Account" : "Home")" asp-action="@(mustChangePassword ? "ChangePassword" : "Index")" aria-label="Gym Manager">
                 <span class="brand-mark" aria-hidden="true">G</span>
                 <span class="brand-copy"><strong>Gym Manager</strong><small>Vận hành thông minh</small></span>
             </a>
             @if (User.Identity?.IsAuthenticated == true)
             {
+                @if (!mustChangePassword)
+                {
                 <nav class="primary-nav" aria-label="Điều hướng chính">
                     <a class="@NavClass("Home")" asp-controller="Home" asp-action="Index" aria-current="@(currentController == "Home" ? "page" : null)">Tổng quan</a>
                     @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist))
@@ -66,9 +70,14 @@
                         <a class="@ReportClass("revenue")" asp-controller="Reports" asp-action="Index" asp-route-type="revenue">Doanh thu</a>
                     }
                 </nav>
+                }
                 <div class="user-menu">
                     <span class="user-avatar" aria-hidden="true">@userInitial</span>
                     <span class="user-identity"><strong>@displayName</strong><small>@roleName</small></span>
+                    @if (!mustChangePassword)
+                    {
+                        <a class="button button-secondary button-compact" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
+                    }
                     <form asp-controller="Account" asp-action="Logout" method="post">
                         <button class="button button-secondary button-compact" type="submit">Đăng xuất</button>
                     </form>

@@ -17,7 +17,8 @@
     </div>
 </section>
 
-@if (Model.MustChangePassword) { <div class="alert alert-warning" role="alert">Tài khoản đang dùng mật khẩu tạm thời. Hãy đổi mật khẩu trước khi thao tác nghiệp vụ.</div> }
+@if (TempData["PasswordChanged"] is string passwordChangedNotice) { <div class="alert alert-success" role="status">@passwordChangedNotice</div> }
+@if (Model.MustChangePassword) { <div class="alert alert-warning" role="alert">Tài khoản đang dùng mật khẩu tạm thời. <a asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu ngay</a>.</div> }
 @if (Model.DataNotice is not null) { <div class="alert alert-warning" role="status"><b>Một số báo cáo chưa sẵn sàng.</b> @Model.DataNotice</div> }
 
 <section class="metric-grid" aria-label="Chỉ số tổng quan">

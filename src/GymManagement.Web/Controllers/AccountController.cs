@@ -59,6 +59,9 @@ public sealed partial class AccountController(
                 new AuthenticationProperties { IsPersistent = model.RememberMe, AllowRefresh = true });
             LogSuccessfulSignIn(logger, user.UserId, user.RoleCode);
 
+            if (user.MustChangePassword)
+                return RedirectToAction(nameof(ChangePassword));
+
             if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                 return LocalRedirect(model.ReturnUrl);
             return RedirectToAction("Index", "Home");
@@ -67,6 +70,77 @@ public sealed partial class AccountController(
         {
             LogDatabaseSignInError(logger, exception);
             ModelState.AddModelError(string.Empty, "Không thể kết nối cơ sở dữ liệu. Vui lòng liên hệ quản trị viên.");
+            return View(model);
+        }
+    }
+
+    [Authorize]
+    [HttpGet("change-password")]
+    public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
+
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(
+        ChangePasswordViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) ||
+            string.IsNullOrWhiteSpace(User.Identity?.Name))
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction(nameof(Login));
+        }
+
+        try
+        {
+            var result = await authenticationService.ChangePasswordAsync(
+                userId, User.Identity.Name, model.CurrentPassword, model.NewPassword,
+                cancellationToken);
+
+            switch (result)
+            {
+                case PasswordChangeResult.InvalidCurrentPassword:
+                    ModelState.AddModelError(nameof(model.CurrentPassword), "Mật khẩu hiện tại không đúng.");
+                    return View(model);
+                case PasswordChangeResult.InvalidNewPassword:
+                    ModelState.AddModelError(nameof(model.NewPassword), "Mật khẩu mới phải từ 8 đến 128 ký tự.");
+                    return View(model);
+                case PasswordChangeResult.SameAsCurrentPassword:
+                    ModelState.AddModelError(nameof(model.NewPassword), "Mật khẩu mới phải khác mật khẩu hiện tại.");
+                    return View(model);
+                case PasswordChangeResult.Locked:
+                case PasswordChangeResult.AccountUnavailable:
+                    await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    TempData["LoginNotice"] = result == PasswordChangeResult.Locked
+                        ? "Tài khoản đang tạm khóa. Vui lòng đăng nhập lại sau khi hết thời gian khóa."
+                        : "Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.";
+                    return RedirectToAction(nameof(Login));
+                case not PasswordChangeResult.Success:
+                    ModelState.AddModelError(string.Empty, "Không thể đổi mật khẩu lúc này. Vui lòng thử lại sau.");
+                    return View(model);
+            }
+
+            var ticket = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            var claims = User.Claims.Where(claim => claim.Type != "must_change_password").ToList();
+            claims.Add(new Claim("must_change_password", bool.FalseString));
+            var principal = new ClaimsPrincipal(
+                new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal,
+                ticket.Properties ?? new AuthenticationProperties { AllowRefresh = true });
+
+            LogSuccessfulPasswordChange(logger, userId);
+            TempData["PasswordChanged"] = "Mật khẩu đã được đổi thành công.";
+            return RedirectToAction("Index", "Home");
+        }
+        catch (SqlException exception)
+        {
+            LogDatabasePasswordChangeError(logger, exception);
+            ModelState.AddModelError(string.Empty, "Không thể đổi mật khẩu lúc này. Vui lòng thử lại sau.");
             return View(model);
         }
     }
@@ -89,4 +163,10 @@ public sealed partial class AccountController(
 
     [LoggerMessage(EventId = 1002, Level = LogLevel.Error, Message = "Database error during sign-in.")]
     private static partial void LogDatabaseSignInError(ILogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 1003, Level = LogLevel.Information, Message = "User {UserId} changed password.")]
+    private static partial void LogSuccessfulPasswordChange(ILogger logger, int userId);
+
+    [LoggerMessage(EventId = 1004, Level = LogLevel.Error, Message = "Database error during password change.")]
+    private static partial void LogDatabasePasswordChangeError(ILogger logger, Exception exception);
 }

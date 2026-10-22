@@ -4,6 +4,20 @@ namespace GymManagement.Web.Services;
 
 public sealed class Pbkdf2PasswordHasher : IPasswordHasher
 {
+    public const int MinimumIterations = 100_000;
+
+    public PasswordHashResult Hash(string password, int iterations)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+        if (iterations is < MinimumIterations or > 1_000_000)
+            throw new ArgumentOutOfRangeException(nameof(iterations));
+
+        var salt = RandomNumberGenerator.GetBytes(16);
+        var hash = Rfc2898DeriveBytes.Pbkdf2(
+            password, salt, iterations, HashAlgorithmName.SHA256, 32);
+        return new PasswordHashResult(hash, salt, iterations);
+    }
+
     public bool Verify(string password, byte[] salt, byte[] expectedHash, int iterations)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(password);
@@ -15,7 +29,7 @@ public sealed class Pbkdf2PasswordHasher : IPasswordHasher
             return false;
         }
 
-        if (iterations is < 100_000 or > 1_000_000)
+        if (iterations is < MinimumIterations or > 1_000_000)
         {
             return false;
         }

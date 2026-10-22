@@ -59,6 +59,8 @@ Tài khoản demo:
 | `trainer` | `Trainer@123` | Huấn luyện viên |
 | `ketoan` | `KeToan@123` | Kế toán |
 
+Sau khi đăng nhập, nhân viên có thể chọn **Đổi mật khẩu** trên thanh tài khoản. Hệ thống yêu cầu nhập mật khẩu hiện tại, mật khẩu mới (8–128 ký tự) và xác nhận. Nếu `NguoiDung.MustChangePassword = 1`, tài khoản sẽ được đưa thẳng đến trang đổi mật khẩu và chưa thể mở các chức năng khác; đổi thành công sẽ xóa cờ này qua `dbo.sp_ChangePassword`. Các tài khoản seed ở trên có cờ bằng `0`; nếu đổi mật khẩu demo, mật khẩu mẫu trong bảng sẽ không còn đăng nhập được trên database đó.
+
 ## Kiểm tra thao tác nghiệp vụ
 
 Đăng nhập bằng `admin` và thực hiện tuần tự:

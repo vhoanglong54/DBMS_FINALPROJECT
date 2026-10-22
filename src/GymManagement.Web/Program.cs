@@ -64,6 +64,7 @@ app.UseStaticFiles();
 app.UseStatusCodePagesWithReExecute("/home/http-status", "?code={0}");
 app.UseRouting();
 app.UseAuthentication();
+app.UseMiddleware<MustChangePasswordMiddleware>();
 app.UseAuthorization();
 
 app.MapHealthChecks("/health");

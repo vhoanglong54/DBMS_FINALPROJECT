@@ -8,4 +8,11 @@ public interface IAuthenticationService
         string username,
         string password,
         CancellationToken cancellationToken);
+
+    Task<PasswordChangeResult> ChangePasswordAsync(
+        int userId,
+        string username,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken);
 }
