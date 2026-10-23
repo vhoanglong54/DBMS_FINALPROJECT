@@ -114,7 +114,7 @@ erDiagram
 | Trigger | `trg_HoiVien_PreventDeleteActive`, ba trigger kiểm tra lịch/HLV/sức chứa và hai trigger bảo vệ booking |
 | View | `vw_HoiVienCoBan`, `vw_HoiVienSapHetHan`, `vw_LichLop_ConCho`, `vw_CongSuatLop`, `vw_LichSuCheckIn`, `vw_TV4_DoanhThuTheoNgay` cùng các view hỗ trợ |
 | Index | `IX_DangKyGoi_MemberId_Status`, `IX_HoaDon_MembershipId_Status`, `IX_LichLop_RoomId_StartAt_EndAt`, `IX_DatLop_SessionId_Status`, `IX_CheckIn_MemberId_CheckedAt` và các index hỗ trợ |
-| Procedure | 44 procedure, gồm `sp_HoiVien_Luu`, `sp_DangKyGoiTapMoi`, `sp_ThanhToan_Them`, `sp_DatLop_DatCho`, `sp_CheckIn_GhiNhan`, `sp_StaffAccount_Create`, `sp_StaffAccount_SuggestCode`, `sp_TV4_BaoCaoDoanhThu` |
+| Procedure | 45 procedure, gồm `sp_HoiVien_Luu`, `sp_DangKyGoiTapMoi`, `sp_ThanhToan_Them`, `sp_DatLop_DatCho`, `sp_CheckIn_GhiNhan`, `sp_StaffAccount_Create`, `sp_StaffAccount_SuggestCode`, `sp_TV4_BaoCaoDoanhThu` |
 | Function | 9 function, gồm `fn_GioVN`, `fn_ChoTrongLop`, `fn_GoiHieuLuc`, `fn_DieuKienDatLop`, `fn_LichLopTheoKhoang`, `fn_TongDoanhThuHoiVien` |
 
 ## 6. Transaction, đồng thời, phân quyền
@@ -124,11 +124,11 @@ erDiagram
 Quản trị viên tạo nhân viên và tài khoản trong cùng transaction `sp_StaffAccount_Create`; procedure tự gắn role theo vị trí, đặt trạng thái đổi mật khẩu sau lần đăng nhập đầu và ghi `AuditLog` mà không lưu mật khẩu rõ. Web chỉ gửi hash/salt PBKDF2. Tài khoản mới đăng nhập rồi đổi mật khẩu qua `sp_ChangePassword`.
 Form tạo nhân viên gọi `sp_StaffAccount_SuggestCode` để điền sẵn mã `NV-0001` theo các mã đã có; ô vẫn sửa được. Gợi ý không giữ chỗ, vì vậy `UQ_NhanVien_EmployeeCode` tiếp tục chặn trùng khi lưu.
 
-Các role: `rl_GymAdmin` (toàn quyền), `rl_LeTan` (hội viên, đăng ký, booking, check-in qua procedure), `rl_HuanLuyenVien` (xem lịch/lớp và điểm danh qua procedure), `rl_KeToan` (hóa đơn/thanh toán/báo cáo), `rl_GymApp` (chỉ execute entry point). Không cấp quyền ghi trực tiếp rộng rãi vào bảng nghiệp vụ.
+Các role SQL: `rl_GymAdmin` (toàn quyền), `rl_LeTan` (hội viên, đăng ký, booking, check-in qua procedure), `rl_HuanLuyenVien` (xem lịch/lớp và điểm danh qua procedure), `rl_KeToan` (hóa đơn/thanh toán/báo cáo), `rl_GymApp` (chỉ execute entry point). Web dùng role trong cookie: admin quản lý toàn bộ, lễ tân đăng ký/hủy gói và đặt/hủy chỗ, kế toán ghi thanh toán tiếp, HLV chỉ check-in lớp mình phụ trách. Các SQL role dùng để kiểm thử quyền SQL trực tiếp; ứng dụng dùng một kết nối dịch vụ và không tự gắn SQL role riêng cho từng người đăng nhập. Không cấp quyền ghi trực tiếp rộng rãi vào bảng nghiệp vụ.
 
 ## 7. Kiểm thử và bằng chứng bảo vệ
 
-- Mỗi procedure có test thành công và test rollback/lỗi; lưu script tái tạo trong `tests/` và đính kèm ảnh/kết quả thật vào PR liên quan.
+- Các luồng trọng tâm có test thành công và test rollback/lỗi trong `database/10*.sql` và `tests/`; không khẳng định mọi procedure đều có test riêng.
 - Kiểm thử quyền bằng từng login mẫu: một thao tác được phép và một thao tác bị `DENY`.
 - Index: chạy cùng truy vấn trước/sau index, lưu Actual Execution Plan và `SET STATISTICS IO, TIME ON`.
 - Demo: cấu hình connection string, đăng nhập, làm xuyên suốt đăng ký → thanh toán → đặt lớp → check-in bằng mã hội viên → báo cáo; không dùng ảnh/dữ liệu giả thay cho kết nối trực tiếp.

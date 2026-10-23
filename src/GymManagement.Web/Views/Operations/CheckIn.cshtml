@@ -7,7 +7,10 @@
         <h1>Check-in hội viên</h1>
         <p class="muted">Nhập mã hiển thị trên hồ sơ hội viên, ví dụ HV0001.</p>
     </div>
-    <a class="button button-light" asp-controller="MemberSearch" asp-action="Index">Tra cứu hội viên</a>
+    @if (!Model.IsTrainer)
+    {
+        <a class="button button-light" asp-controller="MemberSearch" asp-action="Index">Tra cứu hội viên</a>
+    }
 </div>
 
 @if (TempData["Success"] is string success)
@@ -15,7 +18,12 @@
     <div class="alert alert-success" role="status">@success</div>
 }
 
+@if (Model.IsTrainer && Model.AvailableSessions.Count == 0)
+{
+    <p class="alert alert-danger">Hiện không có buổi lớp của bạn trong giờ check-in.</p>
+}
 <form method="post" class="form-card">
+    <input asp-for="Method" type="hidden" />
     <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
     <div class="form-grid">
         <div>
@@ -25,16 +33,14 @@
         </div>
         <div>
             <label asp-for="SessionId"></label>
-            <input asp-for="SessionId" type="number" min="1" placeholder="Để trống nếu tập tự do" />
-            <span asp-validation-for="SessionId" class="field-validation"></span>
-        </div>
-        <div>
-            <label asp-for="Method"></label>
-            <select asp-for="Method">
-                <option value="FRONT_DESK">Lễ tân</option>
-                <option value="BARCODE">Mã vạch</option>
-                <option value="KIOSK">Kiosk</option>
+            <select asp-for="SessionId" required="@(Model.IsTrainer ? "required" : null)">
+                @if (!Model.IsTrainer) { <option value="">Tập tự do</option> }
+                @foreach (var session in Model.AvailableSessions)
+                {
+                    <option value="@session.Id">@session.ClassName — @session.StartAt.ToString("HH:mm") — @session.TrainerName</option>
+                }
             </select>
+            <span asp-validation-for="SessionId" class="field-validation"></span>
         </div>
     </div>
     <div class="form-actions">

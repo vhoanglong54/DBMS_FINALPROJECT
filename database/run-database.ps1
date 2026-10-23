@@ -8,6 +8,7 @@ param(
     [switch]$DropExisting,
     [switch]$SkipTests,
     [switch]$SecurityOnly,
+    [switch]$UpdateLogicOnly,
     [switch]$CreateDemoLogins,
 
     [string]$AdminPassword = 'CHANGE_ME_Admin',
@@ -33,7 +34,11 @@ if ($SecurityOnly -and $DropExisting) {
     throw 'Không thể dùng SecurityOnly cùng DropExisting.'
 }
 
-if ($SecurityOnly) {
+if ($UpdateLogicOnly -and ($DropExisting -or $SecurityOnly)) {
+    throw 'UpdateLogicOnly không dùng cùng DropExisting hoặc SecurityOnly.'
+}
+
+if ($SecurityOnly -or $UpdateLogicOnly) {
     & $sqlcmd.Source -S $Server -E -b -r 1 -d master -Q "IF DB_ID(N'$DatabaseName') IS NULL THROW 51000, N'Database chưa tồn tại.', 1;"
     if ($LASTEXITCODE -ne 0) { throw "Database $DatabaseName chưa tồn tại." }
 }
@@ -73,7 +78,22 @@ if ($SecurityOnly) {
     $scripts = @('database\08_security.sql')
 }
 
-if (-not $SkipTests -and -not $SecurityOnly) {
+if ($UpdateLogicOnly) {
+    $scripts = @(
+        'database\07a_membership_functions.sql',
+        'database\07b_operations_functions.sql',
+        'database\04b_operations_views.sql',
+        'database\04c_tv4_reporting_views.sql',
+        'database\06a_membership_procedures.sql',
+        'database\06b_operations_procedures.sql',
+        'database\08_security.sql',
+        'database\08a_membership_security_grants.sql',
+        'database\08b_operations_security_grants.sql',
+        'database\08c_tv4_reporting_security_grants.sql'
+    )
+}
+
+if (-not $SkipTests -and -not $SecurityOnly -and -not $UpdateLogicOnly) {
     $scripts += @(
         'database\10_smoke_tests.sql',
         'database\10a_membership_smoke_tests.sql',
@@ -105,6 +125,9 @@ foreach ($relativePath in $scripts) {
 
 if ($SecurityOnly) {
     Write-Host "Database $DatabaseName đã cập nhật các đối tượng bảo mật; không chạy lại schema hoặc seed." -ForegroundColor Green
+}
+elseif ($UpdateLogicOnly) {
+    Write-Host "Database $DatabaseName đã cập nhật function, view, procedure và quyền; không chạy lại schema hoặc seed." -ForegroundColor Green
 }
 else {
     Write-Host "Database $DatabaseName đã được cài đặt và kiểm thử thành công." -ForegroundColor Green

@@ -5,7 +5,7 @@
 @if (Model.Notice is not null) { <div class="alert alert-warning" role="status">@Model.Notice</div> }
 <form method="get" class="filter-panel">
     <label for="q">Từ khóa</label><input id="q" name="q" maxlength="120" value="@Model.Query" placeholder="Tên, mã hội viên, số điện thoại" />
-    <label for="status">Trạng thái gói</label><select id="status" name="status"><option value="">Tất cả</option>@foreach (var value in new[] { "ACTIVE", "EXPIRED", "PENDING", "SUSPENDED", "CANCELLED", "NO_MEMBERSHIP", "INACTIVE" }) { <option value="@value" selected="@(Model.Status == value)">@DisplayLabels.Status(value)</option> }</select>
+    <label for="status">Trạng thái gói</label><select id="status" name="status"><option value="">Tất cả</option>@foreach (var value in new[] { "ACTIVE", "UPCOMING", "EXPIRED", "PENDING", "CANCELLED", "NO_MEMBERSHIP", "INACTIVE" }) { <option value="@value" selected="@(Model.Status == value)">@DisplayLabels.Status(value)</option> }</select>
     <label for="pageSize">Số dòng</label><select id="pageSize" name="pageSize">@foreach (var size in new[] { 10, 20, 50, 100 }) { <option value="@size" selected="@(Model.PageSize == size)">@size</option> }</select><button type="submit" class="button">Tìm kiếm</button>
 </form>
 <section class="panel table-panel">

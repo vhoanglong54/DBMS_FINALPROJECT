@@ -21,7 +21,9 @@ AS
         l.Capacity,
         ISNULL(b.ConfirmedCount, 0) AS ConfirmedCount,
         l.Capacity - ISNULL(b.ConfirmedCount, 0) AS SeatsLeft,
-        l.Status
+        CASE WHEN l.Status = 'SCHEDULED' AND l.EndAt <= dbo.fn_GioVN(SYSUTCDATETIME()) THEN 'COMPLETED'
+             WHEN l.Status = 'SCHEDULED' AND l.StartAt <= dbo.fn_GioVN(SYSUTCDATETIME()) THEN 'IN_PROGRESS'
+             ELSE l.Status END AS Status
     FROM dbo.LichLop AS l
     INNER JOIN dbo.LopTap AS lt ON lt.ClassId = l.ClassId
     INNER JOIN dbo.PhongTap AS r ON r.RoomId = l.RoomId

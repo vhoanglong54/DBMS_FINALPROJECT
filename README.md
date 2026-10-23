@@ -36,7 +36,7 @@ Yêu cầu SQL Server Express và `sqlcmd`. Nên dùng database riêng để th�
 
 Runner tạo database sạch, chạy toàn bộ schema/module/security/seed và bốn tầng smoke test. Không dùng `-DropExisting` với database có dữ liệu cần giữ.
 
-Kết quả chuẩn của bản cài mới: 15 bảng, 43 CHECK, 19 FK, 6 trigger, 9 view, 20 non-PK index, 44 procedure, 9 function, 17 procedure transaction và 5 database role.
+Kết quả chuẩn của bản cài mới: 15 bảng, 43 CHECK, 19 FK, 6 trigger, 9 view, 20 non-PK index, 45 procedure, 9 function, 17 procedure transaction và 5 database role.
 
 ## Chạy ứng dụng
 
@@ -68,6 +68,14 @@ Nếu database đã được cài trước khi có chức năng này, chạy l�
 ```powershell
 .\database\run-database.ps1 -Server '.\SQLEXPRESS' -DatabaseName 'GymManagementDemo' -SecurityOnly
 ```
+
+Sau khi cập nhật logic đặt chỗ, check-in và thanh toán, dùng `-UpdateLogicOnly` thay vì `-SecurityOnly`; lệnh này cập nhật function/view/procedure/quyền, giữ nguyên bảng và dữ liệu:
+
+```powershell
+.\database\run-database.ps1 -Server '.\SQLEXPRESS' -DatabaseName 'GymManagementDemo' -UpdateLogicOnly
+```
+
+Quyền web: admin quản lý phòng/loại lớp, tạo và hủy buổi; lễ tân đăng ký/hủy gói và đặt/hủy chỗ; kế toán ghi thanh toán tiếp; HLV xem lịch và check-in lớp mình phụ trách trong khoảng từ 30 phút trước giờ bắt đầu đến khi kết thúc. Admin được thực hiện các thao tác trên. Check-in tập tự do dành cho admin/lễ tân. Hủy gói không tự hoàn tiền; gói còn chỗ lớp sắp tới hoặc hóa đơn đang trả một phần phải được xử lý trước khi hủy.
 
 ## Kiểm tra thao tác nghiệp vụ
 

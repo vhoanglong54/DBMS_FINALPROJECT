@@ -17,16 +17,17 @@ dotnet user-secrets --project src/GymManagement.Web set "ConnectionStrings:GymDb
 dotnet run --project src/GymManagement.Web
 ```
 
-Seed có các tài khoản demo `admin`, `letan`, `trainer`, `ketoan`; mật khẩu được ghi trong `database/README.md`. Đăng nhập được xác thực qua SQL Server và PBKDF2, không dùng tài khoản giả trong code.
+Seed có các tài khoản demo `admin`, `letan`, `trainer`, `ketoan`; mật khẩu được ghi trong `README.md` ở thư mục gốc. Đăng nhập được xác thực qua SQL Server và PBKDF2, không dùng tài khoản giả trong code.
 
 ## Dashboard và quyền truy cập
 
-- **Admin** xem membership, doanh thu, lịch lớp và check-in.
+- **Admin** quản lý phòng, loại lớp, tạo/hủy buổi, đặt chỗ và check-in.
 - **Accountant** xem doanh thu.
-- **Receptionist** tìm hội viên, xem sắp hết hạn, lịch lớp và check-in.
-- **Trainer** xem công suất lớp và check-in.
+- **Receptionist** tìm hội viên, đăng ký/hủy gói, đặt/hủy chỗ, xem sắp hết hạn, lịch lớp và check-in.
+- **Accountant** xem đăng ký/hóa đơn và ghi thanh toán tiếp; không đăng ký hoặc hủy gói.
+- **Trainer** xem lịch/công suất lớp và check-in cho lớp mình phụ trách trong giờ cho phép; không sửa danh mục hay tạo/hủy buổi.
 
-Middleware yêu cầu đăng nhập. Controller cũng chặn báo cáo theo role, không chỉ ẩn liên kết trên giao diện. Trang CRUD hội viên hiện có bị giới hạn role Admin/Lễ tân.
+Middleware yêu cầu đăng nhập. Controller chặn từng thao tác theo role, không chỉ ẩn liên kết trên giao diện. Trang CRUD hội viên giới hạn role Admin/Lễ tân.
 
 ## Tìm kiếm và báo cáo
 

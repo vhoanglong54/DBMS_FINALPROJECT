@@ -33,6 +33,7 @@ public sealed partial class MembershipsController(
     }
 
     [HttpGet]
+    [Authorize(Policy = Policies.FrontDesk)]
     public async Task<IActionResult> Create(
         int? memberId,
         CancellationToken cancellationToken)
@@ -48,6 +49,7 @@ public sealed partial class MembershipsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.FrontDesk)]
     public async Task<IActionResult> Create(
         MembershipCreateViewModel model,
         CancellationToken cancellationToken)
@@ -80,11 +82,17 @@ public sealed partial class MembershipsController(
     }
 
     [HttpGet]
+    [Authorize(Policy = Policies.Finance)]
     public async Task<IActionResult> Pay(long invoiceId, CancellationToken cancellationToken)
     {
         var item = (await repository.ListMembershipsAsync(cancellationToken))
             .FirstOrDefault(membership => membership.InvoiceId == invoiceId);
         if (item?.Total is null || item.Paid is null) return NotFound();
+        if (item.Status == "CANCELLED" || item.InvoiceStatus == "CANCELLED")
+        {
+            TempData["Error"] = "Gói hoặc hóa đơn đã hủy, không thể ghi nhận thanh toán.";
+            return RedirectToAction(nameof(Index));
+        }
 
         var remaining = item.Total.Value - item.Paid.Value;
         if (remaining <= 0)
@@ -105,6 +113,7 @@ public sealed partial class MembershipsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.Finance)]
     public async Task<IActionResult> Pay(
         PaymentCreateViewModel model,
         CancellationToken cancellationToken)
@@ -128,6 +137,7 @@ public sealed partial class MembershipsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.FrontDesk)]
     public async Task<IActionResult> Cancel(
         long id,
         string reason,

@@ -26,6 +26,18 @@ public sealed class SqlOperationsRepository(ISqlConnectionFactory connectionFact
         return rooms;
     }
 
+    public async Task<RoomRow?> RoomAsync(int id, CancellationToken cancellationToken)
+    {
+        await using var connection = connectionFactory.CreateConnection();
+        await using var command = Procedure(connection, "dbo.sp_PhongTap_ChiTiet");
+        Add(command, "@RoomId", SqlDbType.Int, id);
+        await connection.OpenAsync(cancellationToken);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+        return new RoomRow(reader.GetInt32(0), reader.GetString(1), reader.GetString(2),
+            reader.GetInt16(3), reader.IsDBNull(4) ? null : reader.GetString(4), reader.GetBoolean(5));
+    }
+
     public async Task<int> SaveRoomAsync(
         RoomEditViewModel model,
         CancellationToken cancellationToken)
@@ -69,6 +81,19 @@ public sealed class SqlOperationsRepository(ISqlConnectionFactory connectionFact
                 reader.GetString(5), reader.GetBoolean(6)));
         }
         return classes;
+    }
+
+    public async Task<ClassTypeRow?> ClassAsync(int id, CancellationToken cancellationToken)
+    {
+        await using var connection = connectionFactory.CreateConnection();
+        await using var command = Procedure(connection, "dbo.sp_LopTap_ChiTiet");
+        Add(command, "@ClassId", SqlDbType.Int, id);
+        await connection.OpenAsync(cancellationToken);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+        return new ClassTypeRow(reader.GetInt32(0), reader.GetString(1), reader.GetString(2),
+            reader.IsDBNull(3) ? null : reader.GetString(3), reader.GetInt16(4),
+            reader.GetString(5), reader.GetBoolean(6));
     }
 
     public async Task<int> SaveClassAsync(
@@ -134,6 +159,23 @@ public sealed class SqlOperationsRepository(ISqlConnectionFactory connectionFact
         return sessions;
     }
 
+    public async Task<SessionRow?> SessionAsync(long id, CancellationToken cancellationToken)
+    {
+        await using var connection = connectionFactory.CreateConnection();
+        await using var command = Procedure(connection, "dbo.sp_LichLop_ChiTiet");
+        Add(command, "@SessionId", SqlDbType.BigInt, id);
+        await connection.OpenAsync(cancellationToken);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+
+        return new SessionRow(
+            reader.GetInt64(0), reader.GetInt32(1), reader.GetString(2),
+            reader.GetInt32(3), reader.GetString(4), reader.GetInt32(5),
+            reader.GetString(6), reader.GetDateTime(7), reader.GetDateTime(8),
+            reader.GetInt16(9), reader.GetInt32(10), reader.GetInt32(11),
+            reader.GetString(12));
+    }
+
     public async Task<long> CreateSessionAsync(
         SessionCreateViewModel model,
         CancellationToken cancellationToken)
@@ -180,6 +222,24 @@ public sealed class SqlOperationsRepository(ISqlConnectionFactory connectionFact
                 reader.IsDBNull(7) ? null : reader.GetString(7)));
         }
         return bookings;
+    }
+
+    public async Task<MemberLookupRow?> FindActiveMemberAsync(
+        string memberCode,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = connectionFactory.CreateConnection();
+        await using var command = Procedure(connection, "dbo.sp_HoiVien_TimKiemNhanh");
+        Add(command, "@Keyword", SqlDbType.NVarChar, memberCode, 100);
+        await connection.OpenAsync(cancellationToken);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var code = reader.GetString(1);
+            if (string.Equals(code, memberCode, StringComparison.OrdinalIgnoreCase))
+                return new MemberLookupRow(reader.GetInt32(0), code);
+        }
+        return null;
     }
 
     public async Task<(long id, string status)> BookAsync(

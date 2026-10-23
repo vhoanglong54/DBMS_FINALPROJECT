@@ -7,7 +7,10 @@
         <h1>Đăng ký và thanh toán</h1>
         <p class="muted">Theo dõi thời hạn gói, hóa đơn và công nợ hội viên.</p>
     </div>
-    <a class="button" asp-action="Create">Đăng ký gói</a>
+    @if (User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist))
+    {
+        <a class="button" asp-action="Create">Đăng ký gói</a>
+    }
 </div>
 
 @if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
@@ -21,6 +24,7 @@
         @foreach (var item in Model.Items)
         {
             var remaining = (item.Total ?? 0) - (item.Paid ?? 0);
+            var partiallyPaid = item.Paid.GetValueOrDefault() > 0 && remaining > 0;
             <tr>
                 <td><strong>@item.MemberCode</strong><br />@item.MemberName</td>
                 <td>@item.PlanName</td>
@@ -35,16 +39,24 @@
                 </td>
                 <td><strong>@remaining.ToString("N0") ₫</strong></td>
                 <td class="actions">
-                    @if (item.InvoiceId is not null && remaining > 0)
+                    @if ((User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Accountant))
+                        && item.InvoiceId is not null && remaining > 0
+                        && item.Status != "CANCELLED" && item.InvoiceStatus != "CANCELLED")
                     {
                         <a asp-action="Pay" asp-route-invoiceId="@item.InvoiceId">Thanh toán</a>
                     }
-                    @if (item.Status is "ACTIVE" or "PENDING" or "SUSPENDED")
+                    @if ((User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist))
+                        && (item.Status is "ACTIVE" or "UPCOMING" or "PENDING" or "SUSPENDED") && !partiallyPaid)
                     {
-                        <form asp-action="Cancel" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Xác nhận hủy gói của hội viên?');">
+                        <form asp-action="Cancel" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Hủy gói không tự động hoàn tiền. Hội viên cần hủy các chỗ lớp sắp tới trước khi hủy gói. Tiếp tục?');">
                             <input type="hidden" name="reason" value="Hủy theo yêu cầu hội viên" />
                             <button class="link-button danger" type="submit">Hủy gói</button>
                         </form>
+                    }
+                    else if ((User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist))
+                        && partiallyPaid && (item.Status is "ACTIVE" or "UPCOMING" or "PENDING" or "SUSPENDED"))
+                    {
+                        <span class="muted">Cần xử lý công nợ trước khi hủy</span>
                     }
                 </td>
             </tr>

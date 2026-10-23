@@ -2,13 +2,17 @@
 @{
     ViewData["Title"] = "Quản lý buổi lớp";
     var session = Model.Session;
+    var canBook = User.IsInRole(RoleCodes.Admin) || User.IsInRole(RoleCodes.Receptionist);
+    var canManage = User.IsInRole(RoleCodes.Admin);
+    var nowVn = DateTime.UtcNow.AddHours(7);
+    var canBookNow = session.Status == "SCHEDULED" && session.StartAt > nowVn;
 }
 
 <div class="page-heading">
     <div>
         <p class="eyebrow">@session.StartAt.ToString("dd/MM/yyyy HH:mm")</p>
         <h1>@session.ClassName</h1>
-        <p class="muted">@session.RoomName · @session.TrainerName · @session.Booked/@session.Capacity chỗ</p>
+        <p class="muted">@session.RoomName · @session.TrainerName · @session.Booked/@session.Capacity chỗ · @DisplayLabels.Status(session.Status)</p>
     </div>
     <a class="button button-light" asp-action="Index">Quay lại lịch lớp</a>
 </div>
@@ -16,7 +20,11 @@
 @if (TempData["Success"] is string success) { <div class="alert alert-success" role="status">@success</div> }
 @if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
 
+@if ((canBook || canManage) && canBookNow)
+{
 <div class="split-grid">
+    @if (canBook)
+    {
     <form asp-action="Book" method="post" class="form-card narrow">
         <input type="hidden" name="sessionId" value="@session.Id" />
         <h2>Đặt chỗ cho hội viên</h2>
@@ -28,7 +36,10 @@
             <a class="button button-light" asp-controller="MemberSearch" asp-action="Index">Tra cứu mã</a>
         </div>
     </form>
+    }
 
+    @if (canManage)
+    {
     <form asp-action="CancelSession" method="post" class="form-card narrow" onsubmit="return confirm('Hủy buổi lớp sẽ ảnh hưởng các lượt đặt chỗ. Bạn chắc chắn muốn tiếp tục?');">
         <input type="hidden" name="id" value="@session.Id" />
         <h2>Hủy buổi lớp</h2>
@@ -38,7 +49,9 @@
             <button class="button button-danger" type="submit">Hủy buổi lớp</button>
         </div>
     </form>
+    }
 </div>
+}
 
 <div class="page-heading section-heading"><h2>Danh sách đặt chỗ</h2></div>
 <div class="table-card">
@@ -52,7 +65,8 @@
                 <td>@booking.BookedAt.ToLocalTime().ToString("dd/MM HH:mm")</td>
                 <td><span class="status-pill @DisplayLabels.StatusCss(booking.Status)">@DisplayLabels.Status(booking.Status)</span></td>
                 <td>
-                    @if (booking.Status is "CONFIRMED" or "WAITLISTED")
+                    @if (canBook && canBookNow && (booking.Status is "CONFIRMED" or "WAITLISTED")
+                        && (booking.Status == "WAITLISTED" || session.StartAt >= nowVn.AddHours(2)))
                     {
                         <form asp-action="CancelBooking" method="post" onsubmit="return confirm('Xác nhận hủy chỗ của hội viên này?');">
                             <input type="hidden" name="id" value="@booking.Id" />

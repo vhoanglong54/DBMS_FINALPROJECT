@@ -10,7 +10,6 @@ namespace GymManagement.Web.Controllers;
 [Authorize(Policy = Policies.Operations)]
 public sealed partial class OperationsController(
     IOperationsRepository repository,
-    IMemberRepository memberRepository,
     ILogger<OperationsController> logger) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -28,12 +27,12 @@ public sealed partial class OperationsController(
     }
 
     [HttpGet]
+    [Authorize(Policy = Policies.AdminOnly)]
     public async Task<IActionResult> Room(int? id, CancellationToken cancellationToken)
     {
         if (id is null) return View(new RoomEditViewModel());
 
-        var room = (await repository.RoomsAsync(true, cancellationToken))
-            .FirstOrDefault(item => item.Id == id);
+        var room = await repository.RoomAsync(id.Value, cancellationToken);
         if (room is null) return NotFound();
 
         return View(new RoomEditViewModel
@@ -48,6 +47,7 @@ public sealed partial class OperationsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.AdminOnly)]
     public Task<IActionResult> Room(
         RoomEditViewModel model,
         CancellationToken cancellationToken) =>
@@ -55,22 +55,24 @@ public sealed partial class OperationsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.AdminOnly)]
     public async Task<IActionResult> SetRoomActive(
         int id,
         bool active,
         CancellationToken cancellationToken)
     {
-        await repository.SetRoomActiveAsync(id, active, cancellationToken);
+        try { await repository.SetRoomActiveAsync(id, active, cancellationToken); }
+        catch (SqlException exception) { TempData["Error"] = exception.Message; }
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
+    [Authorize(Policy = Policies.AdminOnly)]
     public async Task<IActionResult> ClassType(int? id, CancellationToken cancellationToken)
     {
         if (id is null) return View(new ClassTypeEditViewModel());
 
-        var classType = (await repository.ClassesAsync(true, cancellationToken))
-            .FirstOrDefault(item => item.Id == id);
+        var classType = await repository.ClassAsync(id.Value, cancellationToken);
         if (classType is null) return NotFound();
 
         return View(new ClassTypeEditViewModel
@@ -86,6 +88,7 @@ public sealed partial class OperationsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.AdminOnly)]
     public Task<IActionResult> ClassType(
         ClassTypeEditViewModel model,
         CancellationToken cancellationToken) =>
@@ -93,16 +96,19 @@ public sealed partial class OperationsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.AdminOnly)]
     public async Task<IActionResult> SetClassActive(
         int id,
         bool active,
         CancellationToken cancellationToken)
     {
-        await repository.SetClassActiveAsync(id, active, cancellationToken);
+        try { await repository.SetClassActiveAsync(id, active, cancellationToken); }
+        catch (SqlException exception) { TempData["Error"] = exception.Message; }
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
+    [Authorize(Policy = Policies.AdminOnly)]
     public async Task<IActionResult> CreateSession(CancellationToken cancellationToken)
     {
         var model = new SessionCreateViewModel();
@@ -112,6 +118,7 @@ public sealed partial class OperationsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.AdminOnly)]
     public async Task<IActionResult> CreateSession(
         SessionCreateViewModel model,
         CancellationToken cancellationToken)
@@ -141,11 +148,7 @@ public sealed partial class OperationsController(
     [HttpGet]
     public async Task<IActionResult> Session(long id, CancellationToken cancellationToken)
     {
-        var session = (await repository.SessionsAsync(
-                DateTime.Today.AddYears(-1),
-                DateTime.Today.AddYears(2),
-                cancellationToken))
-            .FirstOrDefault(item => item.Id == id);
+        var session = await repository.SessionAsync(id, cancellationToken);
         if (session is null) return NotFound();
 
         return View(new SessionDetailsViewModel
@@ -157,6 +160,7 @@ public sealed partial class OperationsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.AdminOnly)]
     public async Task<IActionResult> CancelSession(
         long id,
         string reason,
@@ -175,6 +179,7 @@ public sealed partial class OperationsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.FrontDesk)]
     public async Task<IActionResult> Book(
         long sessionId,
         string memberCode,
@@ -202,6 +207,7 @@ public sealed partial class OperationsController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Policy = Policies.FrontDesk)]
     public async Task<IActionResult> CancelBooking(
         long id,
         long sessionId,
@@ -220,16 +226,18 @@ public sealed partial class OperationsController(
     }
 
     [HttpGet]
-    public async Task<IActionResult> CheckIn(
-        string? memberCode,
-        CancellationToken cancellationToken) =>
-        View(new CheckInViewModel
+    public async Task<IActionResult> CheckIn(string? memberCode, CancellationToken cancellationToken)
+    {
+        var model = new CheckInViewModel
         {
             MemberCode = memberCode ?? string.Empty,
             History = await repository.CheckInHistoryAsync(
                 (await FindActiveMemberAsync(memberCode, cancellationToken))?.Id,
                 cancellationToken)
-        });
+        };
+        await PopulateCheckInOptionsAsync(model, cancellationToken);
+        return View(model);
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -237,9 +245,13 @@ public sealed partial class OperationsController(
         CheckInViewModel model,
         CancellationToken cancellationToken)
     {
+        if (User.IsInRole(RoleCodes.Trainer) && model.SessionId is null)
+            ModelState.AddModelError(nameof(model.SessionId), "Huấn luyện viên phải chọn buổi lớp mình phụ trách.");
+
         if (!ModelState.IsValid)
         {
             model.History = await repository.CheckInHistoryAsync(null, cancellationToken);
+            await PopulateCheckInOptionsAsync(model, cancellationToken);
             return View(model);
         }
 
@@ -250,6 +262,7 @@ public sealed partial class OperationsController(
             {
                 ModelState.AddModelError(nameof(model.MemberCode), "Không tìm thấy hội viên đang hoạt động với mã này.");
                 model.History = await repository.CheckInHistoryAsync(null, cancellationToken);
+                await PopulateCheckInOptionsAsync(model, cancellationToken);
                 return View(model);
             }
 
@@ -267,20 +280,31 @@ public sealed partial class OperationsController(
             LogCheckInFailure(logger, exception);
             ModelState.AddModelError(string.Empty, exception.Message);
             model.History = await repository.CheckInHistoryAsync(null, cancellationToken);
+            await PopulateCheckInOptionsAsync(model, cancellationToken);
             return View(model);
         }
     }
 
-    private async Task<MemberListItem?> FindActiveMemberAsync(
+    private async Task PopulateCheckInOptionsAsync(CheckInViewModel model, CancellationToken cancellationToken)
+    {
+        model.IsTrainer = User.IsInRole(RoleCodes.Trainer);
+        var now = DateTime.UtcNow.AddHours(7);
+        var sessions = await repository.SessionsAsync(now.Date.AddDays(-1), now.Date.AddDays(1), cancellationToken);
+        model.AvailableSessions = sessions.Where(session =>
+            (session.Status is "SCHEDULED" or "IN_PROGRESS")
+            && session.StartAt.AddMinutes(-30) <= now
+            && session.EndAt >= now
+            && (!model.IsTrainer || session.TrainerId == GetEmployeeId())).ToArray();
+    }
+
+    private async Task<MemberLookupRow?> FindActiveMemberAsync(
         string? memberCode,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(memberCode)) return null;
 
         var normalizedCode = memberCode.Trim();
-        var matches = await memberRepository.ListAsync(normalizedCode, false, cancellationToken);
-        return matches.FirstOrDefault(member =>
-            string.Equals(member.Code, normalizedCode, StringComparison.OrdinalIgnoreCase));
+        return await repository.FindActiveMemberAsync(normalizedCode, cancellationToken);
     }
 
     private int GetEmployeeId() =>

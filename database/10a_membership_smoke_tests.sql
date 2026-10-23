@@ -51,6 +51,8 @@ BEGIN TRY
         THROW 52305, N'Smoke test membership: hóa đơn phải ở trạng thái PARTIAL.', 1;
     IF (SELECT Status FROM dbo.DangKyGoi WHERE MembershipId=@MembershipId) <> 'PENDING'
         THROW 52306, N'Smoke test membership: gói chưa trả đủ phải PENDING.', 1;
+    IF dbo.fn_TongDoanhThuHoiVien(@MemberId) <> 100000
+        THROW 52310, N'Smoke test membership: function doanh thu phải tính cả khoản đã trả một phần.', 1;
 
     EXEC dbo.sp_ThanhToan_Them @InvoiceId=@InvoiceId, @EmployeeId=@EmployeeId,
          @Amount=200000, @PaymentMethod='BANK_TRANSFER', @TransactionReference='SMOKE',
@@ -60,6 +62,8 @@ BEGIN TRY
         THROW 52307, N'Smoke test membership: hóa đơn phải chuyển PAID.', 1;
     IF (SELECT Status FROM dbo.DangKyGoi WHERE MembershipId=@MembershipId) <> 'ACTIVE'
         THROW 52308, N'Smoke test membership: gói phải kích hoạt sau khi trả đủ.', 1;
+    IF dbo.fn_TongDoanhThuHoiVien(@MemberId) <> 300000
+        THROW 52311, N'Smoke test membership: tổng tiền thực nhận không đúng.', 1;
 
     BEGIN TRY
         DELETE dbo.HoiVien WHERE MemberId=@MemberId;
@@ -75,5 +79,34 @@ END TRY
 BEGIN CATCH
     IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
     THROW;
+END CATCH;
+GO
+
+-- Một hóa đơn mới trả một phần không được hủy gói để lại công nợ treo.
+-- Lỗi kỳ vọng tự rollback toàn bộ dữ liệu ZZ-TEST-PARTIAL của phép thử.
+BEGIN TRY
+    BEGIN TRANSACTION SmokePartialCancel;
+    DECLARE @PartialMemberId int, @PartialMembershipId bigint;
+    DECLARE @PartialPlanId int = (SELECT TOP (1) PlanId FROM dbo.GoiTap WHERE IsActive = 1);
+    DECLARE @PartialEmployeeId int = (SELECT TOP (1) EmployeeId FROM dbo.NhanVien WHERE IsActive = 1);
+    DECLARE @PartialToday date = CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME()));
+
+    INSERT dbo.HoiVien(MemberCode, FullName, DateOfBirth, Phone)
+    VALUES ('ZZ-TEST-PARTIAL', N'Hội viên test công nợ', '20000101', '0900000899');
+    SET @PartialMemberId = SCOPE_IDENTITY();
+    INSERT dbo.DangKyGoi(MemberId, PlanId, SoldByEmployeeId, StartDate, EndDate, PriceAtPurchase, Status)
+    VALUES (@PartialMemberId, @PartialPlanId, @PartialEmployeeId,
+            @PartialToday, DATEADD(DAY, 30, @PartialToday), 100000, 'PENDING');
+    SET @PartialMembershipId = SCOPE_IDENTITY();
+    INSERT dbo.HoaDon(InvoiceCode, MembershipId, CreatedByEmployeeId, TotalAmount, PaidAmount, Status)
+    VALUES ('ZZ-TEST-PARTIAL', @PartialMembershipId, @PartialEmployeeId, 100000, 50000, 'PARTIAL');
+
+    EXEC dbo.sp_HuyGoiTap @MembershipId = @PartialMembershipId, @Reason = N'Test hủy công nợ';
+    THROW 52312, N'Smoke test membership: phải chặn hủy gói đang trả một phần.', 1;
+END TRY
+BEGIN CATCH
+    DECLARE @PartialError int = ERROR_NUMBER();
+    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+    IF @PartialError <> 53022 THROW;
 END CATCH;
 GO

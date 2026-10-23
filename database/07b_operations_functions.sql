@@ -78,8 +78,8 @@ RETURN
 GO
 
 /*
-    4. Điều kiện để hội viên giữ chỗ một buổi lớp. Là nguồn sự thật duy nhất cho
-       sp_DatLop, cơ chế đẩy hàng chờ và trigger trg_DatLop_KiemTraDieuKien.
+    4. Điều kiện để hội viên giữ chỗ một buổi lớp. Được dùng khi đặt chỗ
+       và khi xét đẩy hội viên từ hàng chờ lên chỗ xác nhận.
        Không trả dòng nào nếu buổi lớp không tồn tại.
 */
 CREATE OR ALTER FUNCTION dbo.fn_DieuKienDatLop(@MemberId int, @SessionId bigint)
@@ -186,7 +186,9 @@ RETURN
         ll.StartAt,
         ll.EndAt,
         ll.Capacity,
-        ll.Status,
+        CASE WHEN ll.Status = 'SCHEDULED' AND ll.EndAt <= dbo.fn_GioVN(SYSUTCDATETIME()) THEN 'COMPLETED'
+             WHEN ll.Status = 'SCHEDULED' AND ll.StartAt <= dbo.fn_GioVN(SYSUTCDATETIME()) THEN 'IN_PROGRESS'
+             ELSE ll.Status END AS Status,
         ll.Note,
         ISNULL(bk.SeatsTaken, 0) AS SeatsTaken,
         ll.Capacity - ISNULL(bk.SeatsTaken, 0) AS SeatsLeft,

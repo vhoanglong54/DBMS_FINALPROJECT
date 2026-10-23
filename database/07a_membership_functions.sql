@@ -10,10 +10,13 @@ RETURNS DECIMAL(18,2)
 AS
 BEGIN
     DECLARE @Total DECIMAL(18,2) = 0;
-    SELECT @Total = SUM(PaidAmount) 
-    FROM dbo.HoaDon hd 
-    JOIN dbo.DangKyGoi dk ON hd.MembershipId = dk.MembershipId 
-    WHERE dk.MemberId = @MemberId AND hd.Status = 'PAID';
+    -- Tính tiền thực nhận, kể cả hóa đơn mới thanh toán một phần.
+    SELECT @Total = SUM(tt.Amount)
+    FROM dbo.ThanhToan AS tt
+    JOIN dbo.HoaDon AS hd ON hd.InvoiceId = tt.InvoiceId
+    JOIN dbo.DangKyGoi AS dk ON dk.MembershipId = hd.MembershipId
+    WHERE dk.MemberId = @MemberId
+      AND tt.Status = 'COMPLETED' AND hd.Status <> 'CANCELLED';
     
     RETURN ISNULL(@Total, 0);
 END;

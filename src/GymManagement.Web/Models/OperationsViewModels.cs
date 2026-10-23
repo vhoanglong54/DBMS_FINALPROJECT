@@ -8,6 +8,7 @@ public sealed record TrainerOption(int Id, string Name);
 public sealed record SessionRow(long Id, int ClassId, string ClassName, int RoomId, string RoomName, int TrainerId, string TrainerName,
     DateTime StartAt, DateTime EndAt, short Capacity, int Booked, int SeatsLeft, string Status);
 public sealed record BookingRow(long Id, int MemberId, string MemberCode, string MemberName, string Status, DateTime BookedAt, DateTime? CancelledAt, string? Reason);
+public sealed record MemberLookupRow(int Id, string Code);
 public sealed record CheckInRow(long Id, int MemberId, string MemberCode, string MemberName, string EmployeeName, string? ClassName, long? SessionId, DateTime? SessionStart, DateTime CheckedAt, string Method);
 
 public sealed class RoomEditViewModel
@@ -59,13 +60,14 @@ public sealed class CheckInViewModel
     public string MemberCode { get; set; } = string.Empty;
 
     [Range(1, long.MaxValue, ErrorMessage = "Mã buổi lớp phải là số dương.")]
-    [Display(Name = "Mã buổi lớp (không bắt buộc)")]
+    [Display(Name = "Buổi lớp")]
     public long? SessionId { get; set; }
 
     [Required]
-    [RegularExpression("^(FRONT_DESK|BARCODE|KIOSK)$")]
-    [Display(Name = "Phương thức")]
+    [RegularExpression("^FRONT_DESK$")]
     public string Method { get; set; } = "FRONT_DESK";
 
+    public bool IsTrainer { get; set; }
+    public IReadOnlyList<SessionRow> AvailableSessions { get; set; } = [];
     public IReadOnlyList<CheckInRow> History { get; set; } = [];
 }

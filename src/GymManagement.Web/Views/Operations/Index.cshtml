@@ -9,7 +9,10 @@
     </div>
     <div class="actions">
         <a class="button button-light" asp-action="CheckIn">Check-in</a>
-        <a class="button" asp-action="CreateSession">Tạo buổi lớp</a>
+        @if (User.IsInRole(RoleCodes.Admin))
+        {
+            <a class="button" asp-action="CreateSession">Tạo buổi lớp</a>
+        }
     </div>
 </div>
 
@@ -40,7 +43,7 @@
 
 <div class="split-grid">
     <section>
-        <div class="page-heading section-heading"><h2>Phòng tập</h2><a asp-action="Room">Thêm phòng</a></div>
+        <div class="page-heading section-heading"><h2>Phòng tập</h2>@if (User.IsInRole(RoleCodes.Admin)) { <a asp-action="Room">Thêm phòng</a> }</div>
         <div class="table-card">
             <table><tbody>
             @foreach (var room in Model.Rooms)
@@ -50,10 +53,13 @@
                     <td>@room.Capacity chỗ</td>
                     <td><span class="badge @(room.IsActive ? "badge-success" : "badge-muted")">@(room.IsActive ? "Đang mở" : "Đã ngừng")</span></td>
                     <td class="actions">
+                        @if (User.IsInRole(RoleCodes.Admin))
+                        {
                         <a asp-action="Room" asp-route-id="@room.Id">Sửa</a>
                         <form asp-action="SetRoomActive" asp-route-id="@room.Id" asp-route-active="@(!room.IsActive)" method="post" onsubmit="return confirm('Xác nhận thay đổi trạng thái phòng?');">
                             <button class="link-button" type="submit">@(room.IsActive ? "Ngừng" : "Mở lại")</button>
                         </form>
+                        }
                     </td>
                 </tr>
             }
@@ -62,7 +68,7 @@
     </section>
 
     <section>
-        <div class="page-heading section-heading"><h2>Loại lớp</h2><a asp-action="ClassType">Thêm loại</a></div>
+        <div class="page-heading section-heading"><h2>Loại lớp</h2>@if (User.IsInRole(RoleCodes.Admin)) { <a asp-action="ClassType">Thêm loại</a> }</div>
         <div class="table-card">
             <table><tbody>
             @foreach (var classType in Model.Classes)
@@ -72,10 +78,13 @@
                     <td>@classType.Duration phút</td>
                     <td><span class="badge @(classType.IsActive ? "badge-success" : "badge-muted")">@(classType.IsActive ? "Đang mở" : "Đã ngừng")</span></td>
                     <td class="actions">
+                        @if (User.IsInRole(RoleCodes.Admin))
+                        {
                         <a asp-action="ClassType" asp-route-id="@classType.Id">Sửa</a>
                         <form asp-action="SetClassActive" asp-route-id="@classType.Id" asp-route-active="@(!classType.IsActive)" method="post" onsubmit="return confirm('Xác nhận thay đổi trạng thái loại lớp?');">
                             <button class="link-button" type="submit">@(classType.IsActive ? "Ngừng" : "Mở lại")</button>
                         </form>
+                        }
                     </td>
                 </tr>
             }

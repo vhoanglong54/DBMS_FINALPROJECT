@@ -289,11 +289,10 @@ BEGIN
     )
         THROW 51040, N'Chỉ quản trị viên được xem tài khoản nhân viên.', 1;
 
-    SELECT nv.EmployeeCode, nv.FullName, nv.EmployeeType,
-           nd.Username, nd.IsActive AS UserIsActive
-    FROM dbo.NhanVien AS nv
-    INNER JOIN dbo.NguoiDung AS nd ON nd.UserId = nv.UserId
-    ORDER BY nv.EmployeeCode;
+    SELECT EmployeeCode, FullName, EmployeeType, Username, UserIsActive
+    FROM dbo.vw_NhanVienTaiKhoan
+    WHERE UserId IS NOT NULL
+    ORDER BY EmployeeCode;
 END;
 GO
 

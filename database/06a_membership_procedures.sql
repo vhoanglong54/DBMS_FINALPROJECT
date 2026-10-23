@@ -45,7 +45,11 @@ BEGIN
     WHERE MemberId = @MemberId;
 
     SELECT dk.MembershipId, gt.PlanName, dk.StartDate, dk.EndDate,
-           dk.PriceAtPurchase, dk.Status, dk.CancellationReason
+           dk.PriceAtPurchase,
+           CASE WHEN dk.Status = 'ACTIVE' AND dk.EndDate < CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME())) THEN 'EXPIRED'
+                WHEN dk.Status = 'ACTIVE' AND dk.StartDate > CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME())) THEN 'UPCOMING'
+                ELSE dk.Status END AS Status,
+           dk.CancellationReason
     FROM dbo.DangKyGoi AS dk
     INNER JOIN dbo.GoiTap AS gt ON gt.PlanId = dk.PlanId
     WHERE dk.MemberId = @MemberId
@@ -273,10 +277,17 @@ BEGIN
     SET XACT_ABORT ON;
     BEGIN TRY
         BEGIN TRANSACTION;
-        DECLARE @Total decimal(18,2), @Paid decimal(18,2), @MembershipId bigint;
-        SELECT @Total = TotalAmount, @Paid = PaidAmount, @MembershipId = MembershipId
-        FROM dbo.HoaDon WITH (UPDLOCK, HOLDLOCK) WHERE InvoiceId = @InvoiceId AND Status <> 'CANCELLED';
+        DECLARE @Total decimal(18,2), @Paid decimal(18,2), @MembershipId bigint,
+                @MembershipStatus varchar(20);
+        SELECT @Total = hd.TotalAmount, @Paid = hd.PaidAmount,
+               @MembershipId = hd.MembershipId, @MembershipStatus = dk.Status
+        FROM dbo.HoaDon AS hd WITH (UPDLOCK, HOLDLOCK)
+        INNER JOIN dbo.DangKyGoi AS dk WITH (UPDLOCK, HOLDLOCK)
+            ON dk.MembershipId = hd.MembershipId
+        WHERE hd.InvoiceId = @InvoiceId AND hd.Status <> 'CANCELLED';
         IF @Total IS NULL THROW 53016, N'Hóa đơn không tồn tại hoặc đã hủy.', 1;
+        IF @MembershipStatus NOT IN ('PENDING', 'ACTIVE')
+            THROW 53021, N'Không thể thanh toán cho gói đã hủy hoặc ngừng hiệu lực.', 1;
         IF @Amount <= 0 OR @Paid + @Amount > @Total THROW 53017, N'Số tiền vượt quá công nợ còn lại.', 1;
         DECLARE @PaymentNumber bigint = NEXT VALUE FOR dbo.Seq_PaymentCode;
         DECLARE @PaymentCode varchar(30) = CONCAT('TT', RIGHT(CONCAT('00000000', @PaymentNumber), 8));
@@ -309,6 +320,53 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
         IF NULLIF(LTRIM(RTRIM(@Reason)), N'') IS NULL THROW 53018, N'Phải nhập lý do hủy.', 1;
+
+        DECLARE @MemberId int, @StartDate date, @EndDate date;
+        SELECT @MemberId = MemberId, @StartDate = StartDate, @EndDate = EndDate
+        FROM dbo.DangKyGoi WITH (UPDLOCK, HOLDLOCK)
+        WHERE MembershipId = @MembershipId
+          AND Status IN ('PENDING', 'ACTIVE', 'SUSPENDED');
+
+        IF @MemberId IS NULL
+            THROW 53019, N'Gói đăng ký không tồn tại hoặc không thể hủy.', 1;
+
+        -- Đồng bộ với sp_DatLop_DatCho, vốn giữ khóa dòng hội viên
+        -- trước khi kiểm tra điều kiện và ghi đặt chỗ.
+        IF NOT EXISTS
+        (
+            SELECT 1 FROM dbo.HoiVien WITH (UPDLOCK, HOLDLOCK)
+            WHERE MemberId = @MemberId
+        )
+            THROW 53024, N'Không tìm thấy hội viên của gói đăng ký.', 1;
+        IF EXISTS
+        (
+            SELECT 1 FROM dbo.HoaDon WITH (UPDLOCK, HOLDLOCK)
+            WHERE MembershipId = @MembershipId
+              AND PaidAmount > 0 AND PaidAmount < TotalAmount
+        )
+            THROW 53022, N'Hóa đơn đang thanh toán một phần; cần xử lý công nợ trước khi hủy gói.', 1;
+        IF EXISTS
+        (
+            SELECT 1 FROM dbo.DatLop AS d
+            INNER JOIN dbo.LichLop AS l ON l.SessionId = d.SessionId
+            WHERE d.MemberId = @MemberId
+              AND d.Status IN ('CONFIRMED', 'WAITLISTED')
+              AND l.Status <> 'CANCELLED'
+              AND l.StartAt > dbo.fn_GioVN(SYSUTCDATETIME())
+              AND CONVERT(date, l.StartAt) BETWEEN @StartDate AND @EndDate
+              AND NOT EXISTS
+              (
+                  SELECT 1 FROM dbo.DangKyGoi AS other
+                  INNER JOIN dbo.GoiTap AS planOther ON planOther.PlanId = other.PlanId
+                  WHERE other.MemberId = @MemberId
+                    AND other.MembershipId <> @MembershipId
+                    AND other.Status = 'ACTIVE'
+                    AND planOther.AllowsClasses = 1
+                    AND CONVERT(date, l.StartAt) BETWEEN other.StartDate AND other.EndDate
+              )
+        )
+            THROW 53023, N'Hội viên còn đặt chỗ lớp sắp tới; hãy xử lý các lượt đặt trước khi hủy gói.', 1;
+
         UPDATE dbo.DangKyGoi
         SET Status = 'CANCELLED', CancellationReason = @Reason, UpdatedAt = SYSUTCDATETIME()
         WHERE MembershipId = @MembershipId AND Status IN ('PENDING', 'ACTIVE', 'SUSPENDED');
@@ -332,7 +390,10 @@ BEGIN
     SET NOCOUNT ON;
     SELECT dk.MembershipId, hv.MemberId, hv.MemberCode, hv.FullName AS MemberName,
            gt.PlanId, gt.PlanName, dk.StartDate, dk.EndDate, dk.PriceAtPurchase,
-           dk.Status, hd.InvoiceId, hd.InvoiceCode, hd.TotalAmount, hd.PaidAmount, hd.Status AS InvoiceStatus
+           CASE WHEN dk.Status = 'ACTIVE' AND dk.EndDate < CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME())) THEN 'EXPIRED'
+                WHEN dk.Status = 'ACTIVE' AND dk.StartDate > CONVERT(date, dbo.fn_GioVN(SYSUTCDATETIME())) THEN 'UPCOMING'
+                ELSE dk.Status END AS Status,
+           hd.InvoiceId, hd.InvoiceCode, hd.TotalAmount, hd.PaidAmount, hd.Status AS InvoiceStatus
     FROM dbo.DangKyGoi AS dk
     INNER JOIN dbo.HoiVien AS hv ON hv.MemberId = dk.MemberId
     INNER JOIN dbo.GoiTap AS gt ON gt.PlanId = dk.PlanId

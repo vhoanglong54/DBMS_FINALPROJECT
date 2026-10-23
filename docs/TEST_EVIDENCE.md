@@ -59,3 +59,13 @@ Chạy `tests/index/tv3_benchmark.sql` với 20.000 lịch demo. Truy vấn lọ
 | Sau index | 6 |
 
 Logical reads giảm 62,5%. Index đưa `Status` vào key sau `RoomId` để loại nhanh phần lớn lịch đã hủy trước khi xét khoảng thời gian. Script tự tạo lại index và dọn dữ liệu benchmark.
+
+## Bổ sung kiểm thử — 23/10/2026
+
+Trên database kiểm thử riêng `GymManagementFixVerify_20261023`, chạy cài mới toàn bộ, sau đó chạy lại `-UpdateLogicOnly` và các script `10a`, `10b`, `10c`: tất cả PASS. Gate hiện tại trả 15 bảng dự án, 43 CHECK, 6 trigger, 9 view, 20 index không phải PK, **45 procedure**, 9 function, 17 procedure có transaction và 5 SQL role. Database kiểm thử đã được xóa sau khi hoàn tất; `GymManagementDemo` chỉ được cập nhật logic, không chạy lại schema/seed.
+
+`dotnet test tests/GymManagement.Tests/GymManagement.Tests.csproj --no-restore`: **45/45 PASS**. HTTP smoke trên database kiểm thử: admin đăng nhập được, `/health` và 10 trang chính trả 200. Kiểm tra thêm trang phòng, loại lớp, chi tiết buổi và check-in: admin mở được; lễ tân bị từ chối trang phòng/loại lớp/tạo buổi nhưng mở được chi tiết và check-in; HLV bị từ chối các trang quản trị, mở được chi tiết buổi và check-in nhưng không thấy form đặt chỗ.
+
+Cài mới lần cuối trên `GymManagementFinalVerify_20261023` cũng PASS toàn bộ runner; `dotnet test GymManagement.sln --configuration Release --no-restore` đạt **45/45**. HTTP smoke PASS và kiểm tra role bổ sung: admin vào đăng ký gói/thanh toán/tạo buổi; lễ tân vào đăng ký gói nhưng bị từ chối thanh toán tiếp và tạo buổi; HLV bị từ chối cả ba; kế toán vào thanh toán tiếp nhưng bị từ chối đăng ký gói và tạo buổi. Database kiểm thử cuối đã được xóa sau khi chạy.
+
+Smoke SQL mới kiểm tra đặt lại sau khi hủy dùng đúng dòng booking cũ; `fn_DieuKienDatLop` và `sp_DatLop_DatCho` chặn hội viên đặt hai buổi trùng giờ; check-in hợp lệ ghi `CheckIn` và chuyển booking sang `ATTENDED`. Các thử sai trả đúng mã: 52146 (hội viên không tồn tại), 52167 (check-in quá sớm), 53022 (hủy gói đang trả một phần), 53023 (hủy gói còn đặt lớp sắp tới). Dữ liệu `ZZ-TEST-*` được rollback, không còn dòng thử sau kiểm tra.

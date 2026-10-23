@@ -27,3 +27,11 @@ Các nhóm file:
 ```
 
 Chế độ này không chạy lại schema, seed hoặc smoke test và không cho dùng chung với `-DropExisting`.
+
+Sau khi pull bản sửa nghiệp vụ/web, cập nhật function, view, procedure và grant trên database **đã có dữ liệu** bằng lệnh sau (không tạo lại bảng, không chạy seed, không xóa dữ liệu):
+
+```powershell
+.\database\run-database.ps1 -Server '.\SQLEXPRESS' -DatabaseName GymManagementDemo -UpdateLogicOnly
+```
+
+Không dùng `-DropExisting` trên database đang sử dụng. `-UpdateLogicOnly` không chạy smoke test ghi dữ liệu; kiểm thử đầy đủ trên một database riêng trước khi áp dụng nếu cần.

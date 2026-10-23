@@ -11,6 +11,7 @@ public static class DisplayLabels
         "ACTIVE" => "Đang hoạt động",
         "INACTIVE" => "Đã ngừng",
         "PENDING" => "Chờ xử lý",
+        "UPCOMING" => "Chưa tới ngày",
         "SUSPENDED" => "Tạm dừng",
         "CANCELLED" => "Đã hủy",
         "EXPIRED" => "Hết hạn",
@@ -35,7 +36,7 @@ public static class DisplayLabels
     public static string StatusCss(string? value) => Normalize(value) switch
     {
         "ACTIVE" or "OPEN" or "CONFIRMED" or "COMPLETED" or "PAID" or "ATTENDED" => "status-active",
-        "PENDING" or "PARTIALLY_PAID" or "WAITLISTED" or "SUSPENDED" or "SCHEDULED" or "IN_PROGRESS" => "status-pending",
+        "PENDING" or "UPCOMING" or "PARTIALLY_PAID" or "WAITLISTED" or "SUSPENDED" or "SCHEDULED" or "IN_PROGRESS" => "status-pending",
         "INACTIVE" or "EXPIRED" or "CANCELLED" or "FULL" or "FAILED" or "NO_SHOW" => "status-inactive",
         _ => "status-neutral"
     };

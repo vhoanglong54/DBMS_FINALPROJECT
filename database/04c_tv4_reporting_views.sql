@@ -21,6 +21,7 @@ AS
                  AND membership.StartDate <= CONVERT(date, GETDATE())
                  AND membership.EndDate >= CONVERT(date, GETDATE()) THEN 'ACTIVE'
             WHEN membership.Status = 'ACTIVE' AND membership.EndDate < CONVERT(date, GETDATE()) THEN 'EXPIRED'
+            WHEN membership.Status = 'ACTIVE' AND membership.StartDate > CONVERT(date, GETDATE()) THEN 'UPCOMING'
             ELSE membership.Status
         END AS MembershipStatus,
         membership.StartDate,

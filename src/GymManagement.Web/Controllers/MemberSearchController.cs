@@ -7,7 +7,7 @@ namespace GymManagement.Web.Controllers;
 [Authorize(Policy = "MembershipSearch")]
 public sealed partial class MemberSearchController(IGymReportingRepository reports, ILogger<MemberSearchController> logger) : Controller
 {
-    private static readonly string[] AllowedStatuses = ["ACTIVE", "EXPIRED", "PENDING", "SUSPENDED", "CANCELLED", "NO_MEMBERSHIP", "INACTIVE"];
+    private static readonly string[] AllowedStatuses = ["ACTIVE", "UPCOMING", "EXPIRED", "PENDING", "CANCELLED", "NO_MEMBERSHIP", "INACTIVE"];
     private static readonly int[] PageSizeOptions = [10, 20, 50, 100];
 
     [HttpGet]
