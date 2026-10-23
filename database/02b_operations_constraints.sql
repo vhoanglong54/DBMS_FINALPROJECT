@@ -1,3 +1,5 @@
+-- PHẦN 2B — TV3: CHECK cho thời lượng lịch lớp và thời điểm đặt/check-in.
+-- CHECK là ràng buộc trên bảng; INSERT/UPDATE qua web hoặc SSMS đều phải tuân thủ.
 USE [$(DatabaseName)];
 GO
 

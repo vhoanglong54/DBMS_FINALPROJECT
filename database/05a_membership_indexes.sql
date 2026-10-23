@@ -1,3 +1,5 @@
+-- PHẦN 5A — TV2: hai index tường minh hỗ trợ tìm đăng ký theo hội viên/trạng thái
+-- và hóa đơn theo đăng ký/trạng thái; UX_HoiVien_Email nằm trong 01_schema.sql.
 USE [$(DatabaseName)];
 GO
 

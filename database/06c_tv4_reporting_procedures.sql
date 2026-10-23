@@ -1,4 +1,5 @@
-/* GYM-09: parameterized read procedures; app service role never reads base tables. */
+-- PHẦN 6C — TV4: 5 procedure chỉ đọc cho tìm kiếm, dashboard, doanh thu, công suất, điểm danh.
+-- Web gọi các procedure có tham số; không có transaction ghi dữ liệu trong nhóm này.
 USE [$(DatabaseName)];
 GO
 SET ANSI_NULLS ON;

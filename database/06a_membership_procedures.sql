@@ -1,3 +1,5 @@
+-- PHẦN 6A — TV2: 14 stored procedure hội viên, gói, đăng ký, hóa đơn/thanh toán.
+-- Web gọi procedure thay vì ghi thẳng bảng; các procedure ghi quan trọng dùng TRY/CATCH và transaction.
 USE [$(DatabaseName)];
 GO
 
@@ -206,7 +208,8 @@ BEGIN
 END;
 GO
 
-/* Đăng ký gói + hóa đơn + chi tiết + thanh toán đầu tiên là một transaction. */
+-- TRANSACTION TV2 — sp_DangKyGoiTapMoi tạo đăng ký, hóa đơn và chi tiết cùng thành công/hủy.
+-- Chỉ thêm dòng ThanhToan khi @InitialPayment > 0; bằng 0 thì hóa đơn PENDING.
 CREATE OR ALTER PROCEDURE dbo.sp_DangKyGoiTapMoi
     @MemberId int, @PlanId int, @EmployeeId int, @StartDate date,
     @InitialPayment decimal(18,2) = 0, @PaymentMethod varchar(20) = NULL,
@@ -267,6 +270,7 @@ BEGIN
 END;
 GO
 
+-- TRANSACTION TV2 — sp_ThanhToan_Them khóa hóa đơn/gói, ghi khoản thu và cập nhật công nợ.
 CREATE OR ALTER PROCEDURE dbo.sp_ThanhToan_Them
     @InvoiceId bigint, @EmployeeId int, @Amount decimal(18,2),
     @PaymentMethod varchar(20), @TransactionReference varchar(100) = NULL,
@@ -312,6 +316,7 @@ BEGIN
 END;
 GO
 
+-- TRANSACTION TV2 — sp_HuyGoiTap từ chối thiếu lý do/công nợ dở/lượt đặt tương lai phụ thuộc gói.
 CREATE OR ALTER PROCEDURE dbo.sp_HuyGoiTap @MembershipId bigint, @Reason nvarchar(500)
 AS
 BEGIN

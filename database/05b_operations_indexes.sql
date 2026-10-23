@@ -1,3 +1,5 @@
+-- PHẦN 5B — Index vận hành: TV3 phụ trách bốn index đặt chỗ/lịch/check-in;
+-- TV4 phụ trách IX_LichLop_StartAt_Status cho lọc lịch và báo cáo.
 USE [$(DatabaseName)];
 GO
 
@@ -32,6 +34,7 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LichLop_TrainerId_Star
         ON dbo.LichLop(TrainerId, Status, StartAt, EndAt);
 GO
 
+-- TV4 — Lọc lịch theo thời điểm bắt đầu và trạng thái.
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LichLop_StartAt_Status')
     CREATE NONCLUSTERED INDEX IX_LichLop_StartAt_Status
         ON dbo.LichLop(StartAt, Status)

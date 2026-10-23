@@ -1,3 +1,7 @@
+-- PHẦN 1 — Schema 15 bảng: định nghĩa cột, PK/FK/UNIQUE/CHECK/DEFAULT.
+-- Phụ trách theo phiếu: TV1 (VaiTro, NguoiDung, NhanVien, AuditLog),
+-- TV2 (6 bảng hội viên–billing), TV3 (5 bảng phòng–lớp–check-in).
+-- File này chỉ chạy trên database chưa có schema; không dùng để cập nhật dữ liệu cũ.
 USE [$(DatabaseName)];
 GO
 
@@ -19,6 +23,7 @@ GO
 BEGIN TRY
     BEGIN TRANSACTION;
 
+    -- TV1 — Tài khoản/nhân sự: vai trò, người dùng và nhân viên.
     CREATE TABLE dbo.VaiTro
     (
         RoleId          smallint IDENTITY(1,1) NOT NULL,
@@ -87,10 +92,12 @@ BEGIN TRY
         CONSTRAINT CK_NhanVien_EmployeeType CHECK (EmployeeType IN ('MANAGER', 'RECEPTIONIST', 'TRAINER', 'ACCOUNTANT'))
     );
 
+    -- TV1 — Index lọc UNIQUE: một UserId khác NULL chỉ gắn tối đa một nhân viên.
     CREATE UNIQUE INDEX UX_NhanVien_UserId
         ON dbo.NhanVien(UserId)
         WHERE UserId IS NOT NULL;
 
+    -- TV2 — Hội viên, gói tập, đăng ký, hóa đơn, chi tiết và thanh toán.
     CREATE TABLE dbo.HoiVien
     (
         MemberId            int IDENTITY(1,1) NOT NULL,
@@ -116,6 +123,7 @@ BEGIN TRY
         CONSTRAINT CK_HoiVien_DateOfBirth CHECK (DateOfBirth >= '19000101')
     );
 
+    -- TV2 — Index lọc UNIQUE: email khác NULL không được trùng giữa các hội viên.
     CREATE UNIQUE INDEX UX_HoiVien_Email
         ON dbo.HoiVien(Email)
         WHERE Email IS NOT NULL;
@@ -226,6 +234,7 @@ BEGIN TRY
         CONSTRAINT CK_ThanhToan_Status CHECK (Status IN ('PENDING', 'COMPLETED', 'VOIDED', 'REFUNDED'))
     );
 
+    -- TV3 — Phòng, loại lớp, buổi lớp, đặt chỗ và check-in.
     CREATE TABLE dbo.PhongTap
     (
         RoomId          int IDENTITY(1,1) NOT NULL,
@@ -324,6 +333,7 @@ BEGIN TRY
         CONSTRAINT CK_CheckIn_Method CHECK (CheckInMethod IN ('FRONT_DESK', 'BARCODE', 'KIOSK'))
     );
 
+    -- TV1 — AuditLog lưu sự kiện do nghiệp vụ chủ động ghi; không tự ghi mọi thay đổi bảng.
     CREATE TABLE dbo.AuditLog
     (
         AuditId         bigint IDENTITY(1,1) NOT NULL,

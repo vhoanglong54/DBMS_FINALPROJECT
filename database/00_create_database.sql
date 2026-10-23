@@ -1,3 +1,5 @@
+-- PHẦN 0 — Tạo database nếu chưa có, rồi cấu hình chế độ phục hồi và đọc đồng thời.
+-- $(DatabaseName) là biến sqlcmd do database/run-database.ps1 truyền vào.
 USE [master];
 GO
 

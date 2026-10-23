@@ -1,3 +1,5 @@
+-- PHẦN 3A — TV2: trigger bảo vệ hồ sơ hội viên khỏi bị xóa vật lý khi còn gói hiệu lực.
+-- Trigger chạy tự động sau DELETE, kể cả lệnh SQL trực tiếp bỏ qua giao diện.
 USE [$(DatabaseName)];
 GO
 

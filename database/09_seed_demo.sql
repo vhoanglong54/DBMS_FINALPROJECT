@@ -1,3 +1,5 @@
+-- PHẦN 9A — Nạp dữ liệu mẫu cho tài khoản/nhân viên, hội viên, gói và thanh toán.
+-- Đây là dữ liệu để chạy demo; không tạo bảng, view, procedure hay quyền mới.
 USE [$(DatabaseName)];
 GO
 

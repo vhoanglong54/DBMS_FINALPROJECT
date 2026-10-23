@@ -12,10 +12,12 @@ SET CONCAT_NULL_YIELDS_NULL ON;
 SET NUMERIC_ROUNDABORT OFF;
 GO
 
-/*
+/* PHẦN 1 — SQL ROLE (TV1 theo phiếu phân công).
     Database roles phục vụ minh họa phân quyền trực tiếp trên SQL Server.
-    rl_GymApp là service role của ứng dụng web; tài khoản người dùng cuối vẫn
+    rl_GymApp là service role dự kiến cho ứng dụng web; chỉ có hiệu lực khi
+    SQL principal kết nối thực sự được gán vào role này. Tài khoản người dùng cuối vẫn
     được xác thực ở NguoiDung và phân quyền bằng RoleCode trong cookie claims.
+    Khai báo role ở đây; lệnh GRANT/DENY/REVOKE nằm tại PHẦN 5 bên dưới.
 */
 IF DATABASE_PRINCIPAL_ID(N'rl_GymAdmin') IS NULL CREATE ROLE rl_GymAdmin AUTHORIZATION dbo;
 IF DATABASE_PRINCIPAL_ID(N'rl_LeTan') IS NULL CREATE ROLE rl_LeTan AUTHORIZATION dbo;
@@ -24,6 +26,8 @@ IF DATABASE_PRINCIPAL_ID(N'rl_KeToan') IS NULL CREATE ROLE rl_KeToan AUTHORIZATI
 IF DATABASE_PRINCIPAL_ID(N'rl_GymApp') IS NULL CREATE ROLE rl_GymApp AUTHORIZATION dbo;
 GO
 
+-- PHẦN 2 — VIEW: các cách đọc dữ liệu dùng lại, không lưu bản sao dữ liệu.
+-- vw_HoiVienCoBan: chỉ lộ các cột hội viên cơ bản cho role được cấp SELECT.
 CREATE OR ALTER VIEW dbo.vw_HoiVienCoBan
 AS
     SELECT
@@ -39,6 +43,7 @@ AS
     FROM dbo.HoiVien;
 GO
 
+-- vw_NhanVienTaiKhoan: ghép nhân viên -> tài khoản -> vai trò; nhân viên chưa có tài khoản vẫn hiện nhờ LEFT JOIN.
 CREATE OR ALTER VIEW dbo.vw_NhanVienTaiKhoan
 AS
     SELECT
@@ -61,6 +66,8 @@ AS
     LEFT JOIN dbo.VaiTro AS vt ON vt.RoleId = nd.RoleId;
 GO
 
+-- PHẦN 3 — STORED PROCEDURE xác thực/đổi mật khẩu (TV1).
+-- sp_AuthenticateUser: lấy tài khoản, hash/salt và vai trò; ứng dụng mới đối chiếu mật khẩu.
 CREATE OR ALTER PROCEDURE dbo.sp_AuthenticateUser
     @Username varchar(50)
 AS
@@ -90,6 +97,8 @@ BEGIN
 END;
 GO
 
+-- sp_RecordFailedLogin: mỗi lần sai tăng bộ đếm; từ 5 lần sai khóa 15 phút.
+-- TRANSACTION 1: đọc số lần sai và ghi số mới/LockedUntil như một đơn vị.
 CREATE OR ALTER PROCEDURE dbo.sp_RecordFailedLogin
     @UserId int
 AS
@@ -103,6 +112,7 @@ BEGIN
         DECLARE @Now datetime2(0) = SYSUTCDATETIME();
         DECLARE @CurrentFailures int;
 
+        -- UPDLOCK giữ quyền cập nhật khi đọc, tránh hai lần sai đồng thời cùng lấy một số cũ.
         SELECT @CurrentFailures =
             CASE
                 WHEN LockedUntil IS NOT NULL AND LockedUntil <= @Now THEN 0
@@ -134,6 +144,7 @@ BEGIN
 END;
 GO
 
+-- sp_RecordSuccessfulLogin: đăng nhập đúng thì xóa bộ đếm/khóa và ghi LastLoginAt.
 CREATE OR ALTER PROCEDURE dbo.sp_RecordSuccessfulLogin
     @UserId int
 AS
@@ -155,6 +166,7 @@ BEGIN
 END;
 GO
 
+-- sp_ChangePassword: lưu hash/salt mới do ứng dụng tạo, hạ MustChangePassword về 0.
 CREATE OR ALTER PROCEDURE dbo.sp_ChangePassword
     @UserId int,
     @PasswordHash varbinary(64),
@@ -186,7 +198,8 @@ BEGIN
 END;
 GO
 
-/* Quản trị viên cấp tài khoản và hồ sơ nhân viên trong cùng một giao dịch. */
+-- PHẦN 4 — STORED PROCEDURE cấp/tra cứu tài khoản nhân viên (TV1).
+-- TRANSACTION 2: chỉ ADMIN tạo NguoiDung, NhanVien, AuditLog cùng thành công hoặc cùng hủy.
 CREATE OR ALTER PROCEDURE dbo.sp_StaffAccount_Create
     @ActorUserId int,
     @EmployeeCode varchar(20),
@@ -274,6 +287,7 @@ BEGIN
 END;
 GO
 
+-- sp_StaffAccount_List: ADMIN xem danh sách qua vw_NhanVienTaiKhoan.
 CREATE OR ALTER PROCEDURE dbo.sp_StaffAccount_List
     @ActorUserId int
 AS
@@ -296,7 +310,7 @@ BEGIN
 END;
 GO
 
-/* Gợi ý mã nhân viên kế tiếp; mã chỉ được giữ chỗ khi tạo thành công. */
+-- sp_StaffAccount_SuggestCode: gợi ý mã chưa dùng; mã chỉ được giữ chỗ khi tạo thành công.
 CREATE OR ALTER PROCEDURE dbo.sp_StaffAccount_SuggestCode
     @ActorUserId int
 AS
@@ -331,10 +345,12 @@ BEGIN
 END;
 GO
 
-/* Admin có toàn quyền trong database project. */
+-- PHẦN 5 — PHÂN QUYỀN SQL ROLE: GRANT = cấp, DENY = từ chối, REVOKE = gỡ quyền đã cấp/từ chối.
+-- Đây là quyền của SQL principal; cookie role của nhân viên web là lớp phân quyền khác.
+-- rl_GymAdmin: toàn quyền trong database project.
 GRANT CONTROL ON DATABASE::[$(DatabaseName)] TO rl_GymAdmin;
 
-/* Các role nghiệp vụ chỉ đọc đúng vùng dữ liệu và không ghi trực tiếp bảng. */
+-- GRANT SELECT: lễ tân đọc dữ liệu hội viên, gói, thu tiền và vận hành được liệt kê dưới đây.
 GRANT SELECT ON dbo.vw_HoiVienCoBan TO rl_LeTan;
 GRANT SELECT ON dbo.GoiTap TO rl_LeTan;
 GRANT SELECT ON dbo.DangKyGoi TO rl_LeTan;
@@ -347,6 +363,7 @@ GRANT SELECT ON dbo.LichLop TO rl_LeTan;
 GRANT SELECT ON dbo.DatLop TO rl_LeTan;
 GRANT SELECT ON dbo.CheckIn TO rl_LeTan;
 
+-- GRANT SELECT: HLV chỉ đọc các vùng hội viên/lớp/check-in cần cho công việc.
 GRANT SELECT ON dbo.vw_HoiVienCoBan TO rl_HuanLuyenVien;
 GRANT SELECT ON dbo.PhongTap TO rl_HuanLuyenVien;
 GRANT SELECT ON dbo.LopTap TO rl_HuanLuyenVien;
@@ -354,6 +371,7 @@ GRANT SELECT ON dbo.LichLop TO rl_HuanLuyenVien;
 GRANT SELECT ON dbo.DatLop TO rl_HuanLuyenVien;
 GRANT SELECT ON dbo.CheckIn TO rl_HuanLuyenVien;
 
+-- GRANT SELECT: kế toán đọc hội viên/gói/hóa đơn/thanh toán.
 GRANT SELECT ON dbo.vw_HoiVienCoBan TO rl_KeToan;
 GRANT SELECT ON dbo.GoiTap TO rl_KeToan;
 GRANT SELECT ON dbo.DangKyGoi TO rl_KeToan;
@@ -361,12 +379,14 @@ GRANT SELECT ON dbo.HoaDon TO rl_KeToan;
 GRANT SELECT ON dbo.CTHoaDon TO rl_KeToan;
 GRANT SELECT ON dbo.ThanhToan TO rl_KeToan;
 
+-- DENY: ba role nghiệp vụ không ghi trực tiếp bảng dbo và không đọc bảng nhạy cảm.
 DENY INSERT, UPDATE, DELETE ON SCHEMA::dbo TO rl_LeTan;
 DENY INSERT, UPDATE, DELETE ON SCHEMA::dbo TO rl_HuanLuyenVien;
 DENY INSERT, UPDATE, DELETE ON SCHEMA::dbo TO rl_KeToan;
 DENY SELECT ON dbo.NguoiDung TO rl_LeTan, rl_HuanLuyenVien, rl_KeToan;
 DENY SELECT ON dbo.AuditLog TO rl_LeTan, rl_HuanLuyenVien, rl_KeToan;
 
+-- GRANT EXECUTE: service role rl_GymApp chỉ được gọi các entry point xác thực/nhân sự này.
 GRANT EXECUTE ON dbo.sp_AuthenticateUser TO rl_GymApp;
 GRANT EXECUTE ON dbo.sp_RecordFailedLogin TO rl_GymApp;
 GRANT EXECUTE ON dbo.sp_RecordSuccessfulLogin TO rl_GymApp;
@@ -374,14 +394,16 @@ GRANT EXECUTE ON dbo.sp_ChangePassword TO rl_GymApp;
 GRANT EXECUTE ON dbo.sp_StaffAccount_Create TO rl_GymApp;
 GRANT EXECUTE ON dbo.sp_StaffAccount_List TO rl_GymApp;
 GRANT EXECUTE ON dbo.sp_StaffAccount_SuggestCode TO rl_GymApp;
+-- DENY bảng trực tiếp cho rl_GymApp; quyền chạy procedure ở trên vẫn theo GRANT EXECUTE.
 DENY SELECT, INSERT, UPDATE, DELETE ON SCHEMA::dbo TO rl_GymApp;
 
-/* REVOKE minh họa: bảo đảm Trainer không giữ quyền đọc dữ liệu tài chính nếu từng được cấp trước đó. */
+-- REVOKE: gỡ quyền SELECT cấp trực tiếp trước đó của HLV trên hai bảng tài chính.
+-- REVOKE không tương đương DENY và không tự chặn quyền HLV có thể nhận từ role khác.
 REVOKE SELECT ON dbo.HoaDon FROM rl_HuanLuyenVien;
 REVOKE SELECT ON dbo.ThanhToan FROM rl_HuanLuyenVien;
 GO
 
-/*
+/* PHẦN 6 — SQL LOGIN DEMO TÙY CHỌN (khác tài khoản đăng nhập web).
     Tùy chọn tạo 4 SQL Login demo. Mặc định tắt để không commit mật khẩu.
     Chỉ bật bằng sqlcmd -v CreateDemoLogins=1 và truyền đủ 4 password khác placeholder.
 */

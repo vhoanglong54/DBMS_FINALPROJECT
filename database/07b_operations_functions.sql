@@ -1,3 +1,5 @@
+-- PHẦN 7B — Function dùng chung: fn_GioVN giao TV1, fn_ChoTrongLop giao TV4,
+-- năm function còn lại giao TV3 theo phiếu phân công hiện tại.
 USE [$(DatabaseName)];
 GO
 
@@ -13,7 +15,7 @@ SET NUMERIC_ROUNDABORT OFF;
 GO
 
 /*
-    Module: Vận hành lớp, đặt chỗ, check-in (TV3)
+    Module: Vận hành lớp, đặt chỗ, check-in; có function dùng chung của TV1/TV4.
     Script: 07b - Function
 
     Quy ước thời gian (xem docs/TV3_OPERATIONS_CONTRACT.md):
@@ -25,7 +27,7 @@ GO
     WAITLISTED và CANCELLED không chiếm chỗ.
 */
 
-/* 1. Đổi UTC sang giờ Việt Nam (UTC+7). */
+/* TV1 — 1. Đổi UTC sang giờ Việt Nam (UTC+7). */
 CREATE OR ALTER FUNCTION dbo.fn_GioVN(@UtcTime datetime2(0))
 RETURNS datetime2(0)
 WITH SCHEMABINDING
@@ -35,7 +37,7 @@ BEGIN
 END;
 GO
 
-/* 2. Số chỗ còn trống của một buổi lớp; NULL nếu buổi không tồn tại; âm nếu dữ liệu bị vượt chỗ. */
+/* TV4 — 2. Số chỗ còn trống của một buổi lớp; NULL nếu buổi không tồn tại; âm nếu dữ liệu bị vượt chỗ. */
 CREATE OR ALTER FUNCTION dbo.fn_ChoTrongLop(@SessionId bigint)
 RETURNS int
 AS
@@ -55,7 +57,7 @@ END;
 GO
 
 /*
-    3. Tổng hợp các gói đang hiệu lực của hội viên tại một ngày (giờ VN).
+    TV3 — 3. Tổng hợp các gói đang hiệu lực của hội viên tại một ngày (giờ VN).
        Luôn trả đúng một dòng; ActiveCount = 0 nghĩa là không có gói hiệu lực.
        Hiệu lực = DangKyGoi.Status = 'ACTIVE' và ngày nằm trong [StartDate, EndDate].
 */
@@ -78,7 +80,7 @@ RETURN
 GO
 
 /*
-    4. Điều kiện để hội viên giữ chỗ một buổi lớp. Được dùng khi đặt chỗ
+    TV3 — 4. Điều kiện để hội viên giữ chỗ một buổi lớp. Được dùng khi đặt chỗ
        và khi xét đẩy hội viên từ hàng chờ lên chỗ xác nhận.
        Không trả dòng nào nếu buổi lớp không tồn tại.
 */
@@ -113,7 +115,7 @@ RETURN
 );
 GO
 
-/* 5. Số lượt check-in của hội viên trong một ngày theo giờ VN (dùng range để tận dụng index). */
+/* TV3 — 5. Số lượt check-in của hội viên trong một ngày theo giờ VN (dùng range để tận dụng index). */
 CREATE OR ALTER FUNCTION dbo.fn_SoLuotCheckInTrongNgay(@MemberId int, @Day date)
 RETURNS int
 AS
@@ -132,7 +134,7 @@ END;
 GO
 
 /*
-    6. Chính sách hủy chỗ: hàng chờ hủy được đến lúc lớp bắt đầu; chỗ đã xác nhận
+    TV3 — 6. Chính sách hủy chỗ: hàng chờ hủy được đến lúc lớp bắt đầu; chỗ đã xác nhận
        chỉ được hủy khi còn ít nhất 2 giờ trước giờ bắt đầu (giờ VN).
        Trả 1 nếu được phép hủy, ngược lại 0.
 */
@@ -159,7 +161,7 @@ END;
 GO
 
 /*
-    7. Lịch lớp theo khoảng thời gian kèm số chỗ đã giữ/còn lại/hàng chờ.
+    TV3 — 7. Lịch lớp theo khoảng thời gian kèm số chỗ đã giữ/còn lại/hàng chờ.
        @From/@To giờ VN, khoảng nửa mở [@From, @To). Tham số NULL = không lọc.
 */
 CREATE OR ALTER FUNCTION dbo.fn_LichLopTheoKhoang

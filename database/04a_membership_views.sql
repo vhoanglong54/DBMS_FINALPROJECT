@@ -1,3 +1,5 @@
+-- PHẦN 4A — TV2: vw_HoiVienSapHetHan là truy vấn lưu sẵn để tra cứu hội viên gần hết gói.
+-- View không phải bảng mới và không lưu một bản sao dữ liệu riêng.
 USE [$(DatabaseName)];
 GO
 

@@ -1,3 +1,5 @@
+-- PHẦN 4B — TV3: bốn view đọc lịch còn chỗ, lịch hôm nay, công suất và lịch sử check-in.
+-- SELECT view lấy dữ liệu hiện hành từ các bảng; không INSERT vào view trong luồng web.
 USE [$(DatabaseName)];
 GO
 

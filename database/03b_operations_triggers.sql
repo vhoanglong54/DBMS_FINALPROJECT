@@ -1,3 +1,5 @@
+-- PHẦN 3B — Trigger là lớp kiểm tra cuối khi ghi thẳng vào SQL Server.
+-- Mỗi trigger dưới đây ghi rõ người phụ trách chính theo phiếu phân công.
 USE [$(DatabaseName)];
 GO
 
@@ -6,6 +8,7 @@ GO
 SET QUOTED_IDENTIFIER ON;
 GO
 
+-- TV1 — Chặn gán nhân viên không phải HLV đang hoạt động đứng lớp; FK chỉ kiểm tra ID tồn tại.
 CREATE OR ALTER TRIGGER dbo.trg_LichLop_ValidateTrainerRole
 ON dbo.LichLop
 AFTER INSERT, UPDATE
@@ -33,6 +36,7 @@ BEGIN
 END;
 GO
 
+-- TV3 — Chặn trùng thời gian của cùng phòng hoặc cùng HLV.
 CREATE OR ALTER TRIGGER dbo.trg_LichLop_NoOverlap
 ON dbo.LichLop
 AFTER INSERT, UPDATE
@@ -62,6 +66,7 @@ BEGIN
 END;
 GO
 
+-- TV4 — Sức chứa buổi lớp không được vượt sức chứa phòng.
 CREATE OR ALTER TRIGGER dbo.trg_LichLop_CapacityWithinRoom
 ON dbo.LichLop
 AFTER INSERT, UPDATE
@@ -86,7 +91,7 @@ BEGIN
 END;
 GO
 
-/*
+/* TV3 — trg_DatLop_EnforceSessionCapacity.
     Chặn đầy chỗ. Khóa dòng LichLop bằng UPDLOCK, HOLDLOCK trước khi đếm để
     hai giao dịch insert cùng một buổi phải xếp hàng, không thể cùng đọc "còn
     chỗ". Luồng chính đi qua sp_DatLop_DatCho; trigger này là lớp bảo vệ cuối
@@ -134,6 +139,7 @@ BEGIN
 END;
 GO
 
+-- TV3 — Chặn đặt vào buổi đã hủy, hoàn tất hoặc đã bắt đầu khi ghi trực tiếp bảng DatLop.
 CREATE OR ALTER TRIGGER dbo.trg_DatLop_PreventInvalidSessionBooking
 ON dbo.DatLop
 AFTER INSERT

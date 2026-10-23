@@ -10,6 +10,8 @@ __pycache__/
 .vscode/
 *.user
 *.suo
+~$*.docx
+~$*.pptx
 
 # Secrets and workstation-specific configuration
 appsettings.Development.json

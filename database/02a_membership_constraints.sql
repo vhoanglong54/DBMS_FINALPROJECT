@@ -1,3 +1,5 @@
+-- PHẦN 2A — TV2: SEQUENCE sinh mã hội viên/hóa đơn/thanh toán,
+-- bổ sung cột thể trạng và CHECK giới hạn giá trị hợp lệ.
 USE [$(DatabaseName)];
 GO
 

@@ -1,3 +1,5 @@
+-- PHẦN 9B — Nạp dữ liệu mẫu phòng, loại lớp, lịch, đặt chỗ và check-in.
+-- Dùng sau khi schema và logic vận hành đã được cài đặt.
 USE [$(DatabaseName)];
 GO
 

@@ -1,3 +1,5 @@
+-- PHẦN 7A — TV2: hai function tính tổng doanh thu và xếp hạng hội viên.
+-- Function trả giá trị để truy vấn khác dùng lại; khác procedure xử lý luồng ghi.
 USE [$(DatabaseName)];
 GO
 

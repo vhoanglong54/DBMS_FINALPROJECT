@@ -1,3 +1,5 @@
+-- PHẦN 6B — TV3: 19 stored procedure phòng, lớp, lịch, đặt/hủy chỗ và check-in.
+-- Các khối PhongTap/LopTap/LichLop/DatLop/CheckIn bên dưới là điểm vào nghiệp vụ của web.
 USE [$(DatabaseName)];
 GO
 
@@ -224,6 +226,7 @@ GO
 /* ============================================================
    LichLop
    ============================================================ */
+-- TRANSACTION TV3 — tạo buổi lớp; ràng buộc và trigger kiểm HLV, trùng lịch, sức chứa.
 CREATE OR ALTER PROCEDURE dbo.sp_LichLop_TaoLich
     @ClassId    int,
     @RoomId     int,
@@ -355,6 +358,8 @@ GO
 /* ============================================================
    DatLop - trọng tâm concurrency
    ============================================================ */
+-- TRANSACTION TV3 — giữ khóa hội viên rồi khóa buổi lớp trước khi xét điều kiện và đếm chỗ.
+-- Còn chỗ thì CONFIRMED; hết chỗ thì WAITLISTED, không tạo booking trùng khi đặt lại.
 CREATE OR ALTER PROCEDURE dbo.sp_DatLop_DatCho
     @MemberId       int,
     @SessionId      bigint,
@@ -452,6 +457,7 @@ BEGIN
 END;
 GO
 
+-- TRANSACTION TV3 — hủy chỗ đúng hạn; nếu hủy CONFIRMED thì xét đôn người chờ đầu tiên.
 CREATE OR ALTER PROCEDURE dbo.sp_DatLop_HuyCho
     @BookingId  bigint,
     @Reason     nvarchar(500) = NULL
@@ -549,6 +555,7 @@ GO
 /* ============================================================
    CheckIn
    ============================================================ */
+-- TRANSACTION TV3 — ghi check-in và đổi booking sang ATTENDED cùng một lần xử lý.
 CREATE OR ALTER PROCEDURE dbo.sp_CheckIn_GhiNhan
     @MemberId       int,
     @EmployeeId     int,

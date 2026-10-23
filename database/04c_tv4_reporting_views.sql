@@ -1,4 +1,5 @@
-/* GYM-09: read-only reporting views consumed through TV4 reporting procedures. */
+-- PHẦN 4C — TV4: hai view báo cáo/tra cứu, được các procedure báo cáo đọc lại.
+-- View chỉ đọc ở luồng hiện tại; không phải bảng dữ liệu được cập nhật riêng.
 USE [$(DatabaseName)];
 GO
 SET ANSI_NULLS ON;
